@@ -1,0 +1,22 @@
+---
+interface Props { slots: number; discount: number }
+const { slots, discount } = Astro.props;
+---
+<section id="fundadores" class="section alt" aria-labelledby="fundadores-t"><div class="container founder-grid reveal">
+  <div>
+    <p class="eyebrow">Clientes Fundadores</p>
+    <h2 id="fundadores-t" class="display">Estamos buscando nuestros primeros <span class="num">{slots}</span> comercios</h2>
+    <p class="lead">No es una promoción. Como Cliente Fundador entrás antes que el resto y tenés un canal directo para influir en las prioridades del producto: lo que necesita tu comercio pesa en lo que construimos.</p>
+    <div class="founder-benefits">
+      <article><span class="mono">01</span><div><h3 class="display">Acceso temprano</h3><p>Entrás antes que el resto, con tu comercio ya cargado y acompañamiento en la puesta en marcha.</p></div></article>
+      <article><span class="mono">02</span><div><h3 class="display">Canal directo</h3><p>Hablás con quien construye el producto y lo que te falta entra en la lista de prioridades.</p></div></article>
+      <article><span class="mono">03</span><div><h3 class="display">{discount}% de descuento</h3><p>Sobre el plan anual durante el primer año. Se mantiene aunque después ajustemos precios.</p></div></article>
+    </div>
+  </div>
+  <div class="founder-ticket-wrap">
+    <div class="ticket founder-ticket"><p class="eyebrow subtle">Programa Cliente Fundador</p>
+      <dl><div><dt>Cupo</dt><dd>Primeros {slots} comercios</dd></div><div><dt>Beneficio</dt><dd>{discount}% sobre el plan anual</dd></div><div><dt>Vigencia</dt><dd>Primer año</dd></div><div><dt>Cómo se accede</dt><dd>Sumándote a la lista</dd></div></dl>
+      <a class="button button-primary" href="#sumate" data-track="FOUNDER_SIGNUP" data-placement="founders_card">Quiero ser Cliente Fundador</a>
+    </div><div class="ticket-notch"></div>
+  </div>
+</div></section>

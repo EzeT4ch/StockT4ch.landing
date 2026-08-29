@@ -1,0 +1,11 @@
+---
+import BaseLayout from '../components/layout/BaseLayout.astro';
+---
+<BaseLayout title="Página no encontrada — StockTech" description="La página solicitada no existe." path="/404" noindex>
+  <main id="contenido" class="not-found"><div class="not-found-inner">
+    <a class="wordmark" href="/"><span class="display">Stock<span>Tech</span></span></a>
+    <p class="display not-found-code">404</p><h1 class="display">Esta página no existe</h1>
+    <p class="not-found-copy">Puede que el link esté viejo o que la hayamos movido. Volvé al inicio y seguí desde ahí.</p>
+    <div class="not-found-actions"><a class="button button-primary" href="/">Volver al inicio</a><a class="button button-outline" href="/#precios">Ver precios</a></div>
+  </div></main>
+</BaseLayout>

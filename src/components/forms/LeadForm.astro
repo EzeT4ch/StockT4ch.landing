@@ -1,0 +1,102 @@
+---
+interface Props { launched: boolean; privacyVersion: string }
+const { launched, privacyVersion } = Astro.props;
+---
+<div class="lead-form-shell" data-lead-shell>
+  <form class="lead-form" novalidate data-lead-form>
+    <input type="hidden" name="submissionId" value="" />
+    <input type="hidden" name="privacyVersion" value={privacyVersion} />
+    <div class="honeypot" aria-hidden="true"><label for="website">Sitio web</label><input id="website" name="website" type="text" tabindex="-1" autocomplete="off" /></div>
+    <div class="form-field"><label for="nombre">Tu nombre</label><input id="nombre" name="nombre" maxlength="80" autocomplete="name" placeholder="Martina Gómez" /><p id="nombre-error" class="field-error" role="alert"></p></div>
+    <div class="form-field"><label for="comercio">Nombre del comercio</label><input id="comercio" name="comercio" maxlength="100" autocomplete="organization" placeholder="Almacén Belgrano" /><p id="comercio-error" class="field-error" role="alert"></p></div>
+    <div class="form-field"><label for="rubro">Rubro</label><input id="rubro" name="rubro" maxlength="80" placeholder="Almacén, indumentaria, ferretería…" /><p id="rubro-error" class="field-error" role="alert"></p></div>
+    <div class="form-field"><label for="whatsapp">WhatsApp</label><input id="whatsapp" name="whatsapp" type="tel" maxlength="24" inputmode="tel" autocomplete="tel" placeholder="11 5555 5555" /><p id="whatsapp-error" class="field-error" role="alert"></p></div>
+    <div class="form-field"><label for="email">Email</label><input id="email" name="email" type="email" maxlength="160" inputmode="email" autocomplete="email" placeholder="vos@tucomercio.com" /><p id="email-error" class="field-error" role="alert"></p></div>
+    <fieldset><legend>¿Cuántas sucursales tenés?</legend><div class="branch-options">
+      {['1', '2-3', '4+'].map((option, index) => <label><input type="radio" name="sucursales" value={option} checked={index === 0} /><span>{option}</span></label>)}
+    </div></fieldset>
+    <label class="privacy-consent"><input type="checkbox" name="privacyConsent" /><span>Leí la <a href="/privacidad">Política de privacidad</a> y autorizo el uso de mis datos para recibir información sobre StockTech y el acceso al lanzamiento.</span></label>
+    <p id="privacyConsent-error" class="field-error" role="alert"></p>
+    <p class="form-error" role="alert" hidden data-form-error>No pudimos enviar tus datos. Probá de nuevo o escribinos por WhatsApp.</p>
+    <button class="button button-primary button-lg" type="submit" data-submit-label={launched ? 'Empezar mi prueba gratis' : 'Quiero probar StockTech'}>{launched ? 'Empezar mi prueba gratis' : 'Quiero probar StockTech'}</button>
+    <p class="privacy-note mono">sin CUIT, sin dirección, sin tarjeta · usamos tus datos sólo para contactarte</p>
+  </form>
+  <div class="lead-success" role="status" hidden data-lead-success><span>✓</span><h3 class="display">Listo, quedaste anotado</h3><p>Te escribimos a <strong data-success-email>tu email</strong> cuando abramos el acceso. Si querés adelantar algo, escribinos por WhatsApp.</p></div>
+</div>
+
+<script>
+  import { actions } from 'astro:actions';
+
+  const shell = document.querySelector<HTMLElement>('[data-lead-shell]');
+  const form = shell?.querySelector<HTMLFormElement>('[data-lead-form]');
+  const getField = (name: string): HTMLInputElement | null => form?.elements.namedItem(name) as HTMLInputElement | null;
+  const messages: Record<string, string> = {
+    nombre: 'Contanos tu nombre.', comercio: 'Necesitamos el nombre del comercio.', rubro: 'Indicá el rubro.',
+    whatsapp: 'Ingresá un WhatsApp válido.', email: 'Ingresá un email válido.', privacyConsent: 'Necesitamos tu consentimiento para contactarte.',
+  };
+  const validate = (): string[] => {
+    if (!form) return [];
+    const invalid: string[] = [];
+    for (const name of ['nombre', 'comercio', 'rubro', 'whatsapp', 'email', 'privacyConsent']) {
+      const input = getField(name);
+      const value = input?.value.trim() ?? '';
+      const valid = name === 'privacyConsent' ? input?.checked === true : name === 'whatsapp' ? /^[\d\s+()-]{8,}$/.test(value) : name === 'email' ? /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(value) : value.length >= 2;
+      const error = document.getElementById(`${name}-error`);
+      input?.setAttribute('aria-describedby', `${name}-error`);
+      input?.setAttribute('aria-invalid', valid ? 'false' : 'true');
+      if (error) error.textContent = valid ? '' : (messages[name] ?? 'Revisá este dato.');
+      if (!valid) invalid.push(name);
+    }
+    return invalid;
+  };
+  form?.addEventListener('input', (event) => {
+    if (!form.dataset.started) {
+      form.dataset.started = 'true';
+      window.stockTechAnalytics?.track('FORM_START', { form: 'launch' });
+    }
+    const input = event.target;
+    if (input instanceof HTMLInputElement && input.name in messages) {
+      input.setAttribute('aria-invalid', 'false');
+      const error = document.getElementById(`${input.name}-error`);
+      if (error) error.textContent = '';
+    }
+  });
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const invalid = validate();
+    if (invalid.length) {
+      window.stockTechAnalytics?.track('FORM_ERROR', { fields: invalid });
+      getField(invalid[0] ?? '')?.focus();
+      return;
+    }
+    const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+    const errorBox = form.querySelector<HTMLElement>('[data-form-error]');
+    if (!button || button.disabled) return;
+    const submissionId = getField('submissionId');
+    if (submissionId && !submissionId.value) submissionId.value = crypto.randomUUID();
+    button.disabled = true;
+    button.textContent = 'Enviando…';
+    if (errorBox) errorBox.hidden = true;
+    window.stockTechAnalytics?.track('FORM_SUBMIT', { form: 'launch' });
+    try {
+      const data = Object.fromEntries(new FormData(form).entries());
+      const result = await actions.submitLead({
+        submissionId: String(data.submissionId), nombre: String(data.nombre), comercio: String(data.comercio), rubro: String(data.rubro),
+        whatsapp: String(data.whatsapp), email: String(data.email), sucursales: String(data.sucursales) as '1' | '2-3' | '4+', privacyConsent: true, privacyVersion: String(data.privacyVersion), website: String(data.website),
+      });
+      if (result.error || !result.data?.success) throw new Error('submit_failed');
+      form.hidden = true;
+      const success = shell?.querySelector<HTMLElement>('[data-lead-success]');
+      const email = shell?.querySelector<HTMLElement>('[data-success-email]');
+      if (email) email.textContent = String(data.email);
+      if (success) success.hidden = false;
+      const launched = document.documentElement.dataset.siteMode === 'launched';
+      window.stockTechAnalytics?.track(launched ? 'TRIAL_START' : 'LAUNCH_SIGNUP', { sucursales: data.sucursales });
+    } catch {
+      if (errorBox) errorBox.hidden = false;
+      window.stockTechAnalytics?.track('FORM_ERROR', { reason: 'network' });
+      button.disabled = false;
+      button.textContent = button.dataset.submitLabel ?? 'Quiero probar StockTech';
+    }
+  });
+</script>

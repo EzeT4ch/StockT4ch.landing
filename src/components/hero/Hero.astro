@@ -1,0 +1,28 @@
+---
+import type { HeroVariant } from '../../lib/experiments/types';
+import HeroTicket from './HeroTicket.astro';
+
+interface Props { variant: HeroVariant; ctaLabel: string; trialLine: string }
+const { variant, ctaLabel, trialLine } = Astro.props;
+const title = variant === 'B'
+  ? 'Vendé, controlá tu stock y facturá sin saltar entre sistemas.'
+  : 'Vendé, controlá tu stock y facturá desde un solo lugar.';
+---
+
+<section id="top" class="hero">
+  <div class="hero-glow"></div>
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow"><i></i>Sistema de gestión para comercios</p>
+      <h1 class="display">{title}</h1>
+      <p class="lead">Stock, ventas, pagos, caja y facturación con ARCA en un mismo flujo.</p>
+      <div class="hero-actions">
+        <a class="button button-dark button-lg" href="#sumate" data-track="CTA_CLICK" data-placement="hero">{ctaLabel}<span aria-hidden="true">→</span></a>
+        <a class="button button-outline button-lg" href="#producto">Ver cómo funciona</a>
+      </div>
+      <p class="trial-line"><span aria-hidden="true">✓</span>{trialLine}</p>
+      <div class="feature-labels mono"><span>Stock</span><span>Ventas</span><span>Pagos</span><span>Caja</span><span>Facturación ARCA</span></div>
+    </div>
+    <HeroTicket />
+  </div>
+</section>

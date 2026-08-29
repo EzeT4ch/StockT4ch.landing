@@ -1,0 +1,19 @@
+---
+import BaseLayout from '../components/layout/BaseLayout.astro';
+import LegalHeader from '../components/layout/LegalHeader.astro';
+import LegalFooter from '../components/layout/LegalFooter.astro';
+import { getRuntimeConfig } from '../config/env';
+const config = getRuntimeConfig();
+---
+<BaseLayout title="Términos y condiciones — StockTech" description="Términos de uso del sitio y de la lista de lanzamiento de StockTech." path="/terminos" noindex>
+  <LegalHeader />
+  <main id="contenido" class="container legal-main">
+    <h1 class="display">Términos y condiciones</h1><p class="legal-updated">Última actualización: {config.legal.lastUpdated}.</p>
+    <section><h2 class="display">Alcance de este sitio</h2><p>Este sitio presenta StockTech, un producto en desarrollo de EzeTech. La información publicada es de carácter informativo y puede cambiar antes del lanzamiento.</p></section>
+    <section><h2 class="display">Precios y planes</h2><p>Los precios publicados son valores estimativos de pre-lanzamiento y no constituyen una oferta comercial definitiva. Los planes, sus límites y sus condiciones pueden ajustarse antes de la puesta en producción.</p></section>
+    <section><h2 class="display">Lista de lanzamiento y Clientes Fundadores</h2><p>Sumarse a la lista no genera obligación de contratar ni derecho adquirido sobre un precio. El beneficio de Cliente Fundador está sujeto a la disponibilidad de cupos y a las condiciones que se comuniquen al momento de la contratación.</p></section>
+    <section><h2 class="display">Disponibilidad del servicio</h2><p>El servicio se presta tal como esté disponible al momento de la contratación. Las funcionalidades que dependen de terceros —como la facturación electrónica o los medios de pago— están sujetas a la disponibilidad de esos servicios.</p></section>
+    <section><h2 class="display">Contacto y jurisdicción</h2><p>El titular del sitio es {config.legal.dataControllerName}, con domicilio en {config.legal.address}. Para consultas escribinos a <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a>. Estos términos se rigen por las leyes de {config.legal.jurisdiction}.</p></section>
+  </main>
+  <LegalFooter counterpartHref="/privacidad" counterpartLabel="Privacidad" />
+</BaseLayout>

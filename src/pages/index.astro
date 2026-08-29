@@ -1,0 +1,61 @@
+---
+import BaseLayout from '../components/layout/BaseLayout.astro';
+import Header from '../components/layout/Header.astro';
+import Hero from '../components/hero/Hero.astro';
+import ProblemSection from '../components/product/ProblemSection.astro';
+import ProductFlow from '../components/product/ProductFlow.astro';
+import OfflineSection from '../components/offline/OfflineSection.astro';
+import PaymentsSection from '../components/product/PaymentsSection.astro';
+import HowItWorks from '../components/product/HowItWorks.astro';
+import DemoSection from '../components/product/DemoSection.astro';
+import FounderSection from '../components/founders/FounderSection.astro';
+import PricingSection from '../components/pricing/PricingSection.astro';
+import SecuritySection from '../components/product/SecuritySection.astro';
+import AboutSection from '../components/founders/AboutSection.astro';
+import FaqSection from '../components/product/FaqSection.astro';
+import LeadSection from '../components/forms/LeadSection.astro';
+import Footer from '../components/layout/Footer.astro';
+import FloatingActions from '../components/layout/FloatingActions.astro';
+import { getRuntimeConfig } from '../config/env';
+import { createFaqs } from '../config/content';
+
+const config = getRuntimeConfig();
+const commercial = config.commercial;
+const launched = commercial.mode === 'launched';
+const ctaLabel = launched ? `Probar ${commercial.trialDays} días gratis` : 'Sumarme al lanzamiento';
+const shortCtaLabel = launched ? 'Probar gratis' : ctaLabel;
+const trialLine = launched ? `${commercial.trialDays} días gratis. Sin tarjeta.` : `${commercial.trialDays} días gratis y sin tarjeta cuando lancemos.`;
+const experiment = Astro.locals.experiment ?? { experimentId: 'hero_copy_v1', variant: 'A' as const, version: 1 as const };
+const title = 'StockTech — Todo el flujo de tu comercio, en un solo lugar';
+const description = `Vendé, controlá tu stock y facturá con ARCA desde un solo lugar. ${commercial.trialDays} días gratis y sin tarjeta cuando lancemos.`;
+const faqs = createFaqs(commercial.trialDays, commercial.founders.slots, commercial.founders.discount);
+const structuredData = [
+  { '@context': 'https://schema.org', '@type': 'SoftwareApplication', name: 'StockTech', applicationCategory: 'BusinessApplication', operatingSystem: 'Web', description, url: config.siteUrl.toString() },
+  { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map(({ question, answer }) => ({ '@type': 'Question', name: question, acceptedAnswer: { '@type': 'Answer', text: answer } })) },
+];
+---
+<BaseLayout {title} {description} {structuredData}>
+  <div data-page-context data-variant={experiment.variant} data-analytics-enabled={String(config.analytics.enabled)} data-analytics-debug={String(config.analytics.debug)} data-ga4={config.analytics.ga4MeasurementId ?? undefined} data-meta={config.analytics.metaPixelId ?? undefined}></div>
+  <Header ctaLabel={shortCtaLabel} />
+  <main id="contenido">
+    <Hero variant={experiment.variant} {ctaLabel} {trialLine} />
+    <ProblemSection />
+    <ProductFlow />
+    <OfflineSection />
+    <PaymentsSection />
+    <HowItWorks />
+    <DemoSection />
+    <FounderSection slots={commercial.founders.slots} discount={commercial.founders.discount} />
+    <PricingSection plans={commercial.plans} discount={commercial.founders.discount} trialDays={commercial.trialDays} {ctaLabel} />
+    <SecuritySection />
+    <AboutSection {ctaLabel} />
+    <FaqSection trialDays={commercial.trialDays} slots={commercial.founders.slots} discount={commercial.founders.discount} />
+    <LeadSection {launched} trialDays={commercial.trialDays} {trialLine} whatsappUrl={config.whatsappUrl} privacyVersion={config.legal.privacyVersion} />
+  </main>
+  <Footer whatsappUrl={config.whatsappUrl} />
+  <FloatingActions {ctaLabel} whatsappUrl={config.whatsappUrl} />
+  <script>
+    import '../scripts/analytics-init';
+    import '../scripts/site';
+  </script>
+</BaseLayout>

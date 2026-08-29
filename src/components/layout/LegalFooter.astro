@@ -1,0 +1,5 @@
+---
+interface Props { counterpartHref: string; counterpartLabel: string }
+const { counterpartHref, counterpartLabel } = Astro.props;
+---
+<footer class="legal-footer"><div class="container"><p>© 2026 StockTech by EzeTech</p><a href={counterpartHref}>{counterpartLabel}</a></div></footer>

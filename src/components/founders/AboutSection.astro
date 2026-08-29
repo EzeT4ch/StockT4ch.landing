@@ -1,0 +1,15 @@
+---
+interface Props { ctaLabel: string }
+const { ctaLabel } = Astro.props;
+---
+<section id="detras" class="section" aria-labelledby="detras-t"><div class="container about-grid reveal">
+    <div class="about-photo upcoming-photo" aria-label="Foto de EzeTech próximamente disponible">
+      <p class="eyebrow">Próximamente</p>
+      <p class="mono">Conocé a quien está detrás de StockTech.</p>
+    </div>
+  <div><p class="eyebrow">Detrás de StockTech</p><h2 id="detras-t" class="display">Hay alguien real construyendo esto</h2>
+    <p class="lead">StockTech lo desarrolla <strong>EzeTech</strong>. No es un producto que se lanza y se abandona: cada mejora sale de lo que nos cuentan los comercios que lo usan.</p>
+    <p>Si te sumás ahora, hablás directamente con quien lo construye.</p>
+    <a class="text-link" href="#sumate" data-track="CTA_CLICK" data-placement="detras">{ctaLabel} <span aria-hidden="true">→</span></a>
+  </div>
+</div></section>

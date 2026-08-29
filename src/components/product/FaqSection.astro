@@ -1,0 +1,10 @@
+---
+interface Props { trialDays: number; slots: number; discount: number }
+const { trialDays, slots, discount } = Astro.props;
+import { createFaqs } from '../../config/content';
+const faqs = createFaqs(trialDays, slots, discount);
+---
+<section id="preguntas" class="section alt" aria-labelledby="faq-t"><div class="container faq-container">
+  <h2 id="faq-t" class="display reveal">Preguntas frecuentes</h2>
+  <div class="faq-list reveal">{faqs.map(({ question, answer }) => <details><summary>{question}<span class="mono" aria-hidden="true">+</span></summary><p>{answer}</p></details>)}</div>
+</div></section>

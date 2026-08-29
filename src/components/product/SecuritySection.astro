@@ -1,0 +1,13 @@
+---
+const items = [
+  ['Tus datos separados', 'Cada comercio opera con su propia información.'],
+  ['Backups', 'Copias de resguardo: no depende de una sola máquina.'],
+  ['Auditoría', 'Queda registrado qué se hizo y quién lo hizo.'],
+  ['Usuarios y permisos', 'Cada persona entra con su cuenta.'],
+  ['Continuidad', 'Si se corta la conexión, podés registrar ventas de contingencia.'],
+] as const;
+---
+<section class="section compact alt" aria-labelledby="seguridad-t"><div class="container security-grid reveal">
+  <h2 id="seguridad-t" class="display">La información de<br />tu comercio, cuidada</h2>
+  <div class="security-items">{items.map(([title, detail]) => <article><h3>{title}</h3><p>{detail}</p></article>)}</div>
+</div></section>

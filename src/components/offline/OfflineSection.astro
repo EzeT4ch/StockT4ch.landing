@@ -1,0 +1,26 @@
+---
+const rows = [
+  ['Todo sincronizado', 'Ventas y stock al día'],
+  ['Se cortó Internet', 'StockTech pasa a contingencia'],
+  ['Venta de contingencia guardada', '$ 74.700 · efectivo'],
+  ['Segunda venta guardada', '$ 18.200 · efectivo'],
+  ['Volvió Internet', 'Sincronizando 2 operaciones'],
+  ['Todo al día', 'Stock y caja actualizados'],
+] as const;
+---
+
+<section id="offline" class="section dark offline" aria-labelledby="offline-t" data-offline-flow data-step="0">
+  <div class="dark-glow"></div>
+  <div class="container offline-grid">
+    <div class="reveal">
+      <p class="eyebrow warm">Continuidad</p>
+      <h2 id="offline-t" class="display">Se cayó Internet.<br /><span>Tu negocio no tiene por qué parar.</span></h2>
+      <p class="dark-lead">Si se corta la conexión podés seguir registrando ventas de contingencia. Las operaciones quedan guardadas en el dispositivo y se sincronizan cuando vuelve Internet.</p>
+      <p class="offline-caveat">Algunas funciones, como la facturación con ARCA o los medios de pago que requieren conexión, quedan pendientes hasta recuperar Internet.</p>
+    </div>
+    <div class="offline-panel mockup reveal">
+      <div class="offline-head"><p class="eyebrow">Sucursal Centro · Caja 1</p><span class="connection-pill"><i></i><b data-connection-label>En línea</b></span></div>
+      <ol>{rows.map(([title, detail], index) => <li data-offline-row={index}><span class="mono">{index + 1}</span><p><b>{title}</b><small class="num">{detail}</small></p></li>)}</ol>
+    </div>
+  </div>
+</section>

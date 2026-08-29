@@ -1,0 +1,15 @@
+---
+import LeadForm from './LeadForm.astro';
+import WhatsAppIcon from '../layout/WhatsAppIcon.astro';
+interface Props { launched: boolean; trialDays: number; trialLine: string; whatsappUrl: string; privacyVersion: string }
+const { launched, trialDays, trialLine, whatsappUrl, privacyVersion } = Astro.props;
+---
+<section id="sumate" class="section dark lead-section" aria-labelledby="form-t"><div class="dark-glow"></div><div class="container lead-grid">
+  <div><p class="eyebrow warm">{launched ? 'Probalo gratis' : 'Lista de lanzamiento'}</p>
+    <h2 id="form-t" class="display">{launched ? `Empezá tu prueba de ${trialDays} días` : 'Sumate al lanzamiento'}</h2>
+    <p class="dark-lead">{launched ? 'Creás tu cuenta, cargás tus productos y arrancás. Sin tarjeta.' : 'Dejanos los datos de tu comercio y te escribimos cuando abramos el acceso, con el detalle de cómo entrar como Cliente Fundador.'}</p>
+    <ul class="lead-benefits"><li><span>→</span>{trialLine}</li><li><span>→</span>Son cinco datos. No pedimos CUIT ni tarjeta.</li><li><span>→</span>Te escribimos primero cuando abrimos el acceso.</li></ul>
+    <a class="whatsapp-link" href={whatsappUrl} target="_blank" rel="noopener noreferrer" data-track="WHATSAPP_CLICK"><span class="whatsapp-icon" aria-hidden="true"><WhatsAppIcon /></span>Prefiero preguntar por WhatsApp</a>
+  </div>
+  <LeadForm {launched} {privacyVersion} />
+</div></section>

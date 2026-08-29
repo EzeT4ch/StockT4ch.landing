@@ -1,0 +1,60 @@
+---
+import BaseLayout from '../../components/layout/BaseLayout.astro';
+import LegalHeader from '../../components/layout/LegalHeader.astro';
+import Footer from '../../components/layout/Footer.astro';
+import { getRuntimeConfig } from '../../config/env';
+
+const guides = {
+  'control-de-stock': {
+    title: 'Control de stock para comercios',
+    description: 'Una guía práctica para ordenar productos, existencias y movimientos de stock en un comercio.',
+    sections: [
+      ['Partí de un inventario confiable', 'Registrá cada producto con una descripción clara, su precio y la cantidad inicial disponible. Si cargás información en lote, revisá una muestra antes de confirmar.'],
+      ['Descontá stock desde la venta', 'El control mejora cuando la venta y el inventario forman parte del mismo flujo. Así evitás volver a cargar el movimiento en una planilla separada.'],
+      ['Revisá faltantes con frecuencia', 'Una revisión breve y regular ayuda a detectar diferencias, productos con poco stock y movimientos que necesitan corrección.'],
+    ],
+  },
+  'facturacion-arca': {
+    title: 'Facturación con ARCA desde la venta',
+    description: 'Qué tener en cuenta para integrar la facturación electrónica con la operación diaria del comercio.',
+    sections: [
+      ['Una sola carga', 'La factura debe partir de la venta ya registrada, para evitar volver a escribir productos, importes y datos del comprobante.'],
+      ['Dependencias externas', 'La autorización del comprobante depende de los servicios de ARCA y requiere conexión. Si no hay Internet, esa parte de la operación queda pendiente.'],
+      ['Trazabilidad', 'Conservá la relación entre venta, medio de pago y comprobante para poder revisar la operación completa.'],
+    ],
+  },
+  'como-controlar-stock-negocio': {
+    title: 'Cómo controlar el stock de un negocio',
+    description: 'Pasos simples para mantener el inventario alineado con las ventas y la operación cotidiana.',
+    sections: [
+      ['Definí un punto de partida', 'Contá las existencias y registrá un stock inicial. Sin una base confiable, cualquier reporte posterior arrastra la diferencia.'],
+      ['Registrá cada salida', 'Las ventas, ajustes y pérdidas deben quedar asentados. La consistencia diaria vale más que una corrección grande a fin de mes.'],
+      ['Separá por sucursal', 'Si operás en más de un local, cada movimiento debe indicar a qué sucursal pertenece para evitar mezclar disponibilidades.'],
+    ],
+  },
+  'sistema-gestion-pymes': {
+    title: 'Sistema de gestión para PyMEs',
+    description: 'Cómo evaluar un sistema que reúna stock, ventas, pagos, caja y facturación.',
+    sections: [
+      ['Buscá un flujo integrado', 'La venta, el cobro, el stock, la caja y el comprobante deberían relacionarse sin duplicar cargas.'],
+      ['Priorizá la operación real', 'Evaluá la herramienta con las tareas que el comercio hace todos los días y con las personas que van a usarla.'],
+      ['Planificá la puesta en marcha', 'Prepará productos, precios, stock inicial, sucursales y usuarios antes de empezar a operar.'],
+    ],
+  },
+} as const;
+
+type GuideSlug = keyof typeof guides;
+const slug = Astro.params.slug as GuideSlug;
+const guide = guides[slug];
+if (!guide) return Astro.redirect('/404', 302);
+const config = getRuntimeConfig();
+---
+<BaseLayout title={`${guide.title} — StockTech`} description={guide.description} path={`/guias/${slug}`}>
+  <LegalHeader />
+  <main id="contenido" class="container legal-main">
+    <p class="eyebrow">Guía StockTech</p><h1 class="display">{guide.title}</h1><p class="lead">{guide.description}</p>
+    {guide.sections.map(([heading, body]) => <section><h2 class="display">{heading}</h2><p>{body}</p></section>)}
+    <p><a class="button button-dark" href="/#sumate">Conocé StockTech</a></p>
+  </main>
+  <Footer whatsappUrl={config.whatsappUrl} />
+</BaseLayout>

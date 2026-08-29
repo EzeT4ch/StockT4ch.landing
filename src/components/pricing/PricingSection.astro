@@ -1,0 +1,18 @@
+---
+import { calculateFounderPrice, formatArs, type CommercialPlan } from '../../config/commercial';
+interface Props { plans: readonly CommercialPlan[]; discount: number; trialDays: number; ctaLabel: string }
+const { plans, discount, trialDays, ctaLabel } = Astro.props;
+---
+<section id="precios" class="section" aria-labelledby="precios-t" data-pricing-section><div class="container">
+  <div class="pricing-head reveal"><div><p class="eyebrow">Precios</p><h2 id="precios-t" class="display">Un plan según cómo trabaja tu comercio</h2></div><p class="pricing-note mono">PRECIOS ESTIMATIVOS DE PRE-LANZAMIENTO. Pueden ajustarse antes de la salida. Si te sumaste a la lista, te avisamos.</p></div>
+  <div class="pricing-grid reveal">{plans.map((plan) => <article class:list={['price-card', { recommended: plan.recommended }]}>
+    {plan.recommended && <span class="recommended-label mono">Recomendado</span>}
+    <h3 class="display">{plan.name}</h3><p class="plan-for">{plan.who}</p>
+    <p class="price"><strong class="display num">{formatArs(plan.price)}</strong><span>/ mes</span></p>
+    <p class="estimate mono">estimativo de pre-lanzamiento</p>
+    <div class="founder-price"><b class="num">Cliente Fundador: {formatArs(calculateFounderPrice(plan.price, discount))} / mes</b><span>en el plan anual del primer año</span></div>
+    <ul>{plan.features.map((feature) => <li><span aria-hidden="true">✓</span>{feature}</li>)}</ul>
+    <a class="button" href="#sumate" data-track="PLAN_CLICK" data-plan={plan.id}>{ctaLabel}</a>
+  </article>)}</div>
+  <p class="pricing-trial"><span aria-hidden="true">✓</span>{trialDays} días gratis y sin tarjeta en cualquiera de los tres planes.</p>
+</div></section>

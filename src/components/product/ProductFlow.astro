@@ -1,0 +1,38 @@
+---
+const steps = [
+  { key: 'Stock', benefit: 'Sabés qué tenés y qué falta.', detail: 'Cada venta descuenta el inventario en el momento, en cada sucursal.' },
+  { key: 'Venta', benefit: 'Registrás la venta desde el mostrador.', detail: 'Buscás el producto, armás la venta y cerrás. Sin cambiar de sistema.' },
+  { key: 'Pago', benefit: 'Registrás cómo te pagaron.', detail: 'Efectivo, Mercado Pago o QR quedan asentados en la venta.' },
+  { key: 'Caja', benefit: 'El movimiento queda reflejado automáticamente.', detail: 'El cierre del turno sale del sistema, no de una planilla.' },
+  { key: 'Facturación', benefit: 'Emitís el comprobante con ARCA.', detail: 'La factura sale de la misma venta, sin volver a cargar datos.' },
+] as const;
+---
+
+<section id="producto" class="section" aria-labelledby="producto-t" data-product-flow data-step="1">
+  <div class="container">
+    <div class="section-heading reveal">
+      <p class="eyebrow">Un solo flujo</p>
+      <h2 id="producto-t" class="display">Una venta entra una vez y ordena todo lo demás</h2>
+      <p>Cargás el producto, cobrás y facturás. El stock y la caja se acomodan solos.</p>
+    </div>
+    <div class="product-flow reveal">
+      <div class="flow-steps">
+        {steps.map((step, index) => <button type="button" aria-pressed={index === 0 ? 'true' : 'false'} data-flow-step={index + 1}>
+          <span class="mono num">0{index + 1}</span><span><b class="display">{step.key}</b><strong>{step.benefit}</strong><small>{step.detail}</small></span>
+        </button>)}
+      </div>
+      <div class="flow-panel-wrap mockup">
+        <div class="ticket flow-panel">
+          <div class="ticket-head"><p class="eyebrow subtle" data-flow-title>Inventario</p><span class="mono num" data-flow-count>01 / 05</span></div>
+          <div data-flow-rows>
+            <div class="panel-row"><span>Auriculares Pulse Pro</span><b>18 un.</b></div>
+            <div class="panel-row"><span>Teclado Nova TKL</span><b>7 un.</b></div>
+            <div class="panel-row"><span>Mouse Orbit Wireless</span><b>24 un.</b></div>
+          </div>
+          <div class="panel-foot"><span data-flow-foot-label>Productos con stock bajo</span><b class="display num" data-flow-foot-value>12</b></div>
+        </div>
+        <div class="ticket-notch"></div>
+      </div>
+    </div>
+  </div>
+</section>
