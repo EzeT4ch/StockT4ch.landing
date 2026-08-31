@@ -1,0 +1,43 @@
+---
+interface Props { enabled: boolean }
+const { enabled } = Astro.props;
+---
+
+{enabled && <aside class="analytics-consent" data-analytics-consent role="dialog" aria-label="Preferencias de medición" aria-describedby="analytics-consent-copy" hidden>
+  <p class="eyebrow">Tu privacidad</p>
+  <p id="analytics-consent-copy">Usamos Google Analytics para entender el uso del sitio y mejorarlo. No enviamos los datos que cargás en formularios.</p>
+  <div class="analytics-consent-actions">
+    <button class="button button-primary" type="button" data-analytics-accept>Aceptar medición</button>
+    <button class="button button-outline" type="button" data-analytics-deny>Rechazar</button>
+  </div>
+  <a href="/privacidad">Ver política de privacidad</a>
+</aside>}
+
+<script>
+  const cookieName = 'st_analytics_consent';
+  const changeEvent = 'stocktech:analytics-consent-change';
+  const banner = document.querySelector<HTMLElement>('[data-analytics-consent]');
+  const preferences = document.querySelectorAll<HTMLButtonElement>('[data-analytics-preferences]');
+
+  const getDecision = (): 'granted' | 'denied' | null => {
+    const value = document.cookie.split(';').map((entry) => entry.trim()).find((entry) => entry.startsWith(`${cookieName}=`))?.split('=')[1];
+    return value === 'granted' || value === 'denied' ? value : null;
+  };
+
+  const show = (): void => {
+    if (!banner) return;
+    banner.hidden = false;
+    banner.querySelector<HTMLButtonElement>('[data-analytics-accept]')?.focus();
+  };
+
+  const save = (decision: 'granted' | 'denied'): void => {
+    document.cookie = `${cookieName}=${decision}; Path=/; Max-Age=15552000; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`;
+    if (banner) banner.hidden = true;
+    window.dispatchEvent(new CustomEvent(changeEvent, { detail: { decision } }));
+  };
+
+  if (banner && !getDecision()) show();
+  banner?.querySelector<HTMLButtonElement>('[data-analytics-accept]')?.addEventListener('click', () => save('granted'));
+  banner?.querySelector<HTMLButtonElement>('[data-analytics-deny]')?.addEventListener('click', () => save('denied'));
+  preferences.forEach((button) => button.addEventListener('click', show));
+</script>

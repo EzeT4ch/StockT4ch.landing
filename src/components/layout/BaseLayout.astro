@@ -7,6 +7,7 @@ import '@fontsource/ibm-plex-mono/500.css';
 import '@fontsource/ibm-plex-mono/600.css';
 import '../../styles/global.css';
 import { getRuntimeConfig } from '../../config/env';
+import AnalyticsConsent from './AnalyticsConsent.astro';
 
 interface Props {
   title: string;
@@ -19,6 +20,13 @@ interface Props {
 const { title, description, path = '/', noindex = false, structuredData } = Astro.props;
 const config = getRuntimeConfig();
 const canonical = new URL(path, config.siteUrl).toString();
+const analyticsConsentEnabled = config.analytics.enabled && Boolean(config.analytics.ga4MeasurementId || config.analytics.metaPixelId);
+const pageStructuredData = structuredData ? (Array.isArray(structuredData) ? structuredData : [structuredData]) : [];
+const allStructuredData = [
+  { '@context': 'https://schema.org', '@type': 'Organization', name: 'StockTech', url: config.siteUrl.toString(), logo: new URL('/favicon.svg', config.siteUrl).toString() },
+  { '@context': 'https://schema.org', '@type': 'WebSite', name: 'StockTech', url: config.siteUrl.toString(), inLanguage: 'es-AR' },
+  ...pageStructuredData,
+];
 ---
 
 <!doctype html>
@@ -31,7 +39,7 @@ const canonical = new URL(path, config.siteUrl).toString();
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    {noindex && <meta name="robots" content="noindex,follow" />}
+    <meta name="robots" content={noindex ? 'noindex,follow' : 'index,follow,max-image-preview:large'} />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="es_AR" />
     <meta property="og:site_name" content="StockTech" />
@@ -39,14 +47,18 @@ const canonical = new URL(path, config.siteUrl).toString();
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={new URL('/social-card.svg', config.siteUrl).toString()} />
+    <meta property="og:image:alt" content="StockTech, sistema de gestión para comercios" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={new URL('/social-card.svg', config.siteUrl).toString()} />
-    {structuredData && <script type="application/ld+json" is:inline set:html={JSON.stringify(structuredData)} />}
+    <meta name="twitter:image:alt" content="StockTech, sistema de gestión para comercios" />
+    {config.analytics.cloudflareWebAnalyticsToken && <script is:inline type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={JSON.stringify({ token: config.analytics.cloudflareWebAnalyticsToken })}></script>}
+    <script type="application/ld+json" is:inline set:html={JSON.stringify(allStructuredData)} />
   </head>
   <body>
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
     <slot />
+    <AnalyticsConsent enabled={analyticsConsentEnabled} />
   </body>
 </html>

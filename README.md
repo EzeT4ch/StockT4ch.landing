@@ -46,9 +46,25 @@ docker compose logs -f web nginx
 docker compose down
 ```
 
-Nginx queda publicado en `http://localhost:8080`. El contenedor `web` sólo existe en la red interna. La home y el HTML no se cachean de forma compartida para no mezclar cohortes A/B; los assets hash de `/_astro/` usan cache immutable.
+Nginx queda publicado en `http://localhost:8080` por defecto. En un servidor público definí `NGINX_PORT=80`. El contenedor `web` no publica puertos: usa una red interna para el proxy y una red de salida aislada para enviar leads por SMTP. La home y el HTML no se cachean de forma compartida para no mezclar cohortes A/B; los assets hash de `/_astro/` usan cache immutable.
 
-Los certificados TLS no forman parte de la imagen. Terminá TLS en Cloudflare/proxy externo o montá una configuración/certificados gestionados fuera de este repositorio.
+## HTTPS en producción
+
+El Compose base inicia en HTTP para que el proyecto funcione localmente sin certificados. Cuando `stocktech.com.ar` y `www.stocktech.com.ar` resuelvan al servidor, emití el primer certificado de Let's Encrypt y activá el override de producción:
+
+```bash
+CONTACT_EMAIL=$(sed -n 's/^PUBLIC_CONTACT_EMAIL=//p' .env.production)
+sudo docker compose --env-file .env.production stop nginx
+sudo certbot certonly --standalone --non-interactive --agree-tos --email "$CONTACT_EMAIL" -d stocktech.com.ar -d www.stocktech.com.ar
+sudo docker compose --env-file .env.production -f compose.yaml -f compose.production.yaml up -d --build
+```
+
+`compose.production.yaml` expone 443, redirige HTTP y `www` a `https://stocktech.com.ar`, monta los certificados en modo lectura y atiende los desafíos de renovación. Luego del primer certificado, configurá la renovación por webroot y verificála con:
+
+```bash
+sudo certbot reconfigure --cert-name stocktech.com.ar --webroot -w /opt/stocktech/certbot/www
+sudo certbot renew --dry-run
+```
 
 ## Environment
 
@@ -96,13 +112,17 @@ La métrica primaria en prelaunch es `LAUNCH_SIGNUP`; no declares ganador sólo 
 
 ## Analytics y consentimiento
 
-La UI llama a `AnalyticsPort`, no a proveedores. Los adapters disponibles son consola, GA4, Meta Pixel y composite. Cada evento incorpora automáticamente experimento, variante y página.
+La UI llama a `AnalyticsPort`, no a proveedores. Los adapters disponibles son consola, GA4, Meta Pixel y composite. Cada evento incorpora automáticamente experimento, variante y página. El adaptador GA4 filtra los parámetros: nunca transmite nombres, emails, WhatsApps ni otros datos de formularios.
 
 Eventos: `EXPERIMENT_EXPOSURE`, `CTA_CLICK`, `FORM_START`, `FORM_SUBMIT`, `FORM_ERROR`, `LAUNCH_SIGNUP`, `TRIAL_START`, `WHATSAPP_CLICK`, `PLAN_CLICK`, `FOUNDER_SIGNUP`, `DEMO_VIDEO_PLAY` y `PRICING_VIEW`.
 
 `PRICING_VIEW` se dispara una sola vez al alcanzar 35% de visibilidad. `DEMO_VIDEO_PLAY` queda reservado para cuando `DemoMedia` reciba un video real.
 
-Con `ANALYTICS_ENABLED=false` todo sigue funcionando. Los scripts externos sólo se cargan si existe la cookie de consentimiento `st_analytics_consent=granted`; la cookie técnica A/B no contiene PII y no depende de ese consentimiento. Antes de publicar, integrar la UI/gestor de consentimiento elegido y validar el texto legal.
+Con `ANALYTICS_ENABLED=false` todo sigue funcionando. Para habilitar GA4, definí `ANALYTICS_ENABLED=true` y `GA4_MEASUREMENT_ID=G-XXXXXXXX`; la configuración falla si se habilita medición sin proveedor. El banner permite aceptar o rechazar medición, guarda la decisión en `st_analytics_consent` por seis meses y la persona puede cambiarla desde el pie de página. La cookie técnica A/B no contiene PII y no depende de ese consentimiento.
+
+`CLOUDFLARE_WEB_ANALYTICS_TOKEN` habilita exclusivamente el beacon de Cloudflare Web Analytics para visitas agregadas y rendimiento. Se carga siempre, no recibe eventos comerciales ni datos de formularios, y no reemplaza el consentimiento de GA4. Configurá el hostname de Cloudflare con el dominio canónico `stocktech.com.ar`.
+
+GA4 recibe los eventos en minúscula: `generate_lead` es la conversión principal de prelaunch y `whatsapp_click`, `cta_click`, `form_start`, `form_submit`, `form_error`, `experiment_exposure` y `pricing_view` sirven para analizar el embudo. Registrá como dimensiones personalizadas `experiment_id`, `experiment_variant`, `cta_placement` y `branch_range` si necesitás segmentarlas en informes.
 
 ## Leads y email
 
@@ -135,12 +155,14 @@ Los CTA, el copy del formulario y la conversión cambian de `Sumarme al lanzamie
 ## SEO
 
 - Canonical, OpenGraph y Twitter derivan de `PUBLIC_SITE_URL`.
-- `robots.txt` y `sitemap.xml` se generan en runtime con el dominio configurado.
-- La home incluye `SoftwareApplication`; no se publican ratings, reviews ni métricas inventadas.
+- `robots.txt` y `sitemap.xml` se generan en runtime con el dominio configurado. El sitemap deriva las guías desde `src/config/guides.ts` y publica su fecha de actualización.
+- La home incluye `SoftwareApplication`; todas las páginas incluyen `Organization` y `WebSite`; las guías suman `Article` y `BreadcrumbList`. No se publican ratings, reviews ni métricas inventadas.
 - Privacidad, términos y 404 tienen `noindex`.
 - `lang="es-AR"`, un único H1 real, landmarks, skip link y headings semánticos.
 
-Para cambiar dominio o metadata, actualizá environment y los valores centrales de `src/pages/index.astro`; no hardcodees dominios en componentes.
+Para cambiar dominio o metadata, actualizá environment y los valores centrales de `src/pages/index.astro`; no hardcodees dominios en componentes. Para crear una guía, sumala al catálogo tipado de `src/config/guides.ts`: la ruta, el índice, los enlaces relacionados y el sitemap se actualizan juntos.
+
+Después de cada publicación, enviá `https://stocktech.com.ar/sitemap.xml` en Google Search Console y revisá las URLs nuevas con Inspección de URL. Search Console es la fuente de impresiones, consultas, CTR y posición; Cloudflare y GA4 complementan esa información con visitas y conversiones.
 
 ## Diseño y contenido
 

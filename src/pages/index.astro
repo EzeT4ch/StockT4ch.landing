@@ -27,7 +27,9 @@ const shortCtaLabel = launched ? 'Probar gratis' : ctaLabel;
 const trialLine = launched ? `${commercial.trialDays} días gratis. Sin tarjeta.` : `${commercial.trialDays} días gratis y sin tarjeta cuando lancemos.`;
 const experiment = Astro.locals.experiment ?? { experimentId: 'hero_copy_v1', variant: 'A' as const, version: 1 as const };
 const title = 'StockTech — Todo el flujo de tu comercio, en un solo lugar';
-const description = `Vendé, controlá tu stock y facturá con ARCA desde un solo lugar. ${commercial.trialDays} días gratis y sin tarjeta cuando lancemos.`;
+const description = launched
+  ? `Sistema de gestión para comercios argentinos: ventas, stock, caja y facturación con ARCA en un solo lugar. Probalo ${commercial.trialDays} días sin tarjeta.`
+  : 'Sistema de gestión para comercios argentinos: ventas, stock, caja y facturación con ARCA en un solo lugar. Sumate a la lista de lanzamiento.';
 const faqs = createFaqs(commercial.trialDays, commercial.founders.slots, commercial.founders.discount);
 const structuredData = [
   { '@context': 'https://schema.org', '@type': 'SoftwareApplication', name: 'StockTech', applicationCategory: 'BusinessApplication', operatingSystem: 'Web', description, url: config.siteUrl.toString() },

@@ -12,6 +12,11 @@ const productionEnv = (): NodeJS.ProcessEnv => ({
 
 describe('runtime config', () => {
   it('acepta una configuración productiva completa', () => expect(validateRuntimeConfig(productionEnv()).commercial.trialDays).toBe(15));
+  it('acepta un remitente SMTP con nombre visible', () => expect(validateRuntimeConfig({ ...productionEnv(), LEAD_EMAIL_FROM: 'StockTech <web@stocktech.test>' }).email.from).toBe('StockTech <web@stocktech.test>'));
+  it('rechaza un remitente SMTP con formato inválido', () => expect(() => validateRuntimeConfig({ ...productionEnv(), LEAD_EMAIL_FROM: 'StockTech <web@stocktech.test' })).toThrow(/emails/i));
+  it('rechaza una medición habilitada sin proveedor configurado', () => expect(() => validateRuntimeConfig({ ...productionEnv(), ANALYTICS_ENABLED: 'true' })).toThrow(/proveedor/i));
+  it('rechaza un identificador GA4 inválido', () => expect(() => validateRuntimeConfig({ ...productionEnv(), GA4_MEASUREMENT_ID: 'UA-123' })).toThrow(/GA4_MEASUREMENT_ID/i));
+  it('rechaza un token Cloudflare inválido', () => expect(() => validateRuntimeConfig({ ...productionEnv(), CLOUDFLARE_WEB_ANALYTICS_TOKEN: 'not-a-token' })).toThrow(/CLOUDFLARE_WEB_ANALYTICS_TOKEN/i));
   it('falla ante un placeholder', () => expect(() => validateRuntimeConfig({ ...productionEnv(), PUBLIC_SITE_URL: 'https://example-stocktech.com.ar' })).toThrow(/placeholders/i));
   it('falla ante trial histórico', () => expect(() => validateRuntimeConfig({ ...productionEnv(), TRIAL_DAYS: '14' })).toThrow(/15/));
   it('falla ante pesos que no suman 100', () => expect(() => validateRuntimeConfig({ ...productionEnv(), EXPERIMENT_HERO_WEIGHT_A: '70' })).toThrow(/pesos/i));

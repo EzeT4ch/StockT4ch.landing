@@ -21,6 +21,7 @@ export interface RuntimeConfig {
     readonly debug: boolean;
     readonly ga4MeasurementId: string | null;
     readonly metaPixelId: string | null;
+    readonly cloudflareWebAnalyticsToken: string | null;
   };
   readonly email: {
     readonly provider: EmailProvider;
@@ -46,6 +47,7 @@ export interface RuntimeConfig {
 
 const prohibited = ['example-stocktech.com.ar', '__PUBLIC_SITE_URL__'];
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const emailSenderPattern = /^(?:[^<>\r\n]+ <[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+>|[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+)$/;
 
 const parseBoolean = (value: string | undefined, fallback: boolean): boolean => {
   if (value === undefined || value === '') return fallback;
@@ -100,6 +102,11 @@ export const validateRuntimeConfig = (env: NodeJS.ProcessEnv): RuntimeConfig => 
   const legalLastUpdated = requireValue('LEGAL_LAST_UPDATED', env.LEGAL_LAST_UPDATED, '2026-08-26', production);
   const leadRetentionMonths = parseInteger('LEAD_RETENTION_MONTHS', env.LEAD_RETENTION_MONTHS, 12);
   const privacyVersion = requireValue('LEGAL_PRIVACY_VERSION', env.LEGAL_PRIVACY_VERSION, 'v1.0', production);
+  const analyticsEnabled = parseBoolean(env.ANALYTICS_ENABLED, false);
+  const analyticsDebug = parseBoolean(env.ANALYTICS_DEBUG, !production);
+  const ga4MeasurementId = env.GA4_MEASUREMENT_ID?.trim() || null;
+  const metaPixelId = env.META_PIXEL_ID?.trim() || null;
+  const cloudflareWebAnalyticsToken = env.CLOUDFLARE_WEB_ANALYTICS_TOKEN?.trim() || null;
 
   const errors: string[] = [];
   if (!['prelaunch', 'launched'].includes(siteMode)) errors.push('SITE_MODE debe ser prelaunch o launched.');
@@ -107,12 +114,15 @@ export const validateRuntimeConfig = (env: NodeJS.ProcessEnv): RuntimeConfig => 
   if (founderSlots < 1 || founderSlots > 100) errors.push('FOUNDERS_SLOTS debe estar entre 1 y 100.');
   if (founderDiscount < 1 || founderDiscount > 90) errors.push('FOUNDERS_DISCOUNT debe estar entre 1 y 90.');
   if (heroWeightA < 0 || heroWeightB < 0 || heroWeightA + heroWeightB !== 100) errors.push('Los pesos A/B deben ser positivos y sumar 100.');
-  if (!emailPattern.test(contactEmail) || !emailPattern.test(emailTo) || !emailPattern.test(emailFrom)) errors.push('Los emails configurados deben ser válidos.');
+  if (!emailPattern.test(contactEmail) || !emailPattern.test(emailTo) || !emailSenderPattern.test(emailFrom)) errors.push('Los emails configurados deben ser válidos.');
   if (whatsappNumber.length < 10 || whatsappNumber.length > 15) errors.push('PUBLIC_WHATSAPP_NUMBER debe tener entre 10 y 15 dígitos.');
   if (!['smtp', 'console'].includes(emailProvider)) errors.push('EMAIL_PROVIDER debe ser smtp o console.');
   if (leadRetentionMonths < 1 || leadRetentionMonths > 60) errors.push('LEAD_RETENTION_MONTHS debe estar entre 1 y 60.');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(legalLastUpdated)) errors.push('LEGAL_LAST_UPDATED debe tener formato AAAA-MM-DD.');
   if (!/^v\d+(?:\.\d+){0,2}$/.test(privacyVersion)) errors.push('LEGAL_PRIVACY_VERSION debe tener formato v1, v1.0 o v1.0.0.');
+  if (ga4MeasurementId && !/^G-[A-Z0-9]{4,20}$/.test(ga4MeasurementId)) errors.push('GA4_MEASUREMENT_ID debe tener formato G-XXXXXXXX.');
+  if (cloudflareWebAnalyticsToken && !/^[a-f0-9]{32}$/i.test(cloudflareWebAnalyticsToken)) errors.push('CLOUDFLARE_WEB_ANALYTICS_TOKEN debe tener 32 caracteres hexadecimales.');
+  if (analyticsEnabled && !ga4MeasurementId && !metaPixelId) errors.push('ANALYTICS_ENABLED requiere al menos un proveedor configurado.');
   if (production && emailProvider !== 'smtp') errors.push('EMAIL_PROVIDER debe ser smtp en producción.');
   if (production && prohibited.some((placeholder) => Object.values(env).some((value) => value?.includes(placeholder)))) errors.push('La configuración contiene placeholders prohibidos.');
 
@@ -141,10 +151,11 @@ export const validateRuntimeConfig = (env: NodeJS.ProcessEnv): RuntimeConfig => 
       heroWeightB,
     },
     analytics: {
-      enabled: parseBoolean(env.ANALYTICS_ENABLED, false),
-      debug: parseBoolean(env.ANALYTICS_DEBUG, !production),
-      ga4MeasurementId: env.GA4_MEASUREMENT_ID?.trim() || null,
-      metaPixelId: env.META_PIXEL_ID?.trim() || null,
+      enabled: analyticsEnabled,
+      debug: analyticsDebug,
+      ga4MeasurementId,
+      metaPixelId,
+      cloudflareWebAnalyticsToken,
     },
     email: {
       provider: emailProvider,

@@ -2,59 +2,63 @@
 import BaseLayout from '../../components/layout/BaseLayout.astro';
 import LegalHeader from '../../components/layout/LegalHeader.astro';
 import Footer from '../../components/layout/Footer.astro';
+import { getGuideBySlug, getRelatedGuides } from '../../config/guides';
 import { getRuntimeConfig } from '../../config/env';
 
-const guides = {
-  'control-de-stock': {
-    title: 'Control de stock para comercios',
-    description: 'Una guía práctica para ordenar productos, existencias y movimientos de stock en un comercio.',
-    sections: [
-      ['Partí de un inventario confiable', 'Registrá cada producto con una descripción clara, su precio y la cantidad inicial disponible. Si cargás información en lote, revisá una muestra antes de confirmar.'],
-      ['Descontá stock desde la venta', 'El control mejora cuando la venta y el inventario forman parte del mismo flujo. Así evitás volver a cargar el movimiento en una planilla separada.'],
-      ['Revisá faltantes con frecuencia', 'Una revisión breve y regular ayuda a detectar diferencias, productos con poco stock y movimientos que necesitan corrección.'],
-    ],
-  },
-  'facturacion-arca': {
-    title: 'Facturación con ARCA desde la venta',
-    description: 'Qué tener en cuenta para integrar la facturación electrónica con la operación diaria del comercio.',
-    sections: [
-      ['Una sola carga', 'La factura debe partir de la venta ya registrada, para evitar volver a escribir productos, importes y datos del comprobante.'],
-      ['Dependencias externas', 'La autorización del comprobante depende de los servicios de ARCA y requiere conexión. Si no hay Internet, esa parte de la operación queda pendiente.'],
-      ['Trazabilidad', 'Conservá la relación entre venta, medio de pago y comprobante para poder revisar la operación completa.'],
-    ],
-  },
-  'como-controlar-stock-negocio': {
-    title: 'Cómo controlar el stock de un negocio',
-    description: 'Pasos simples para mantener el inventario alineado con las ventas y la operación cotidiana.',
-    sections: [
-      ['Definí un punto de partida', 'Contá las existencias y registrá un stock inicial. Sin una base confiable, cualquier reporte posterior arrastra la diferencia.'],
-      ['Registrá cada salida', 'Las ventas, ajustes y pérdidas deben quedar asentados. La consistencia diaria vale más que una corrección grande a fin de mes.'],
-      ['Separá por sucursal', 'Si operás en más de un local, cada movimiento debe indicar a qué sucursal pertenece para evitar mezclar disponibilidades.'],
-    ],
-  },
-  'sistema-gestion-pymes': {
-    title: 'Sistema de gestión para PyMEs',
-    description: 'Cómo evaluar un sistema que reúna stock, ventas, pagos, caja y facturación.',
-    sections: [
-      ['Buscá un flujo integrado', 'La venta, el cobro, el stock, la caja y el comprobante deberían relacionarse sin duplicar cargas.'],
-      ['Priorizá la operación real', 'Evaluá la herramienta con las tareas que el comercio hace todos los días y con las personas que van a usarla.'],
-      ['Planificá la puesta en marcha', 'Prepará productos, precios, stock inicial, sucursales y usuarios antes de empezar a operar.'],
-    ],
-  },
-} as const;
-
-type GuideSlug = keyof typeof guides;
-const slug = Astro.params.slug as GuideSlug;
-const guide = guides[slug];
+const slug = Astro.params.slug ?? '';
+const guide = getGuideBySlug(slug);
 if (!guide) return Astro.redirect('/404', 302);
+
 const config = getRuntimeConfig();
+const canonical = new URL(`/guias/${guide.slug}`, config.siteUrl).toString();
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: guide.title,
+    description: guide.description,
+    dateModified: guide.updatedAt,
+    datePublished: guide.updatedAt,
+    mainEntityOfPage: canonical,
+    author: { '@type': 'Organization', name: 'EzeTech' },
+    publisher: { '@type': 'Organization', name: 'StockTech', url: config.siteUrl.toString() },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: config.siteUrl.toString() },
+      { '@type': 'ListItem', position: 2, name: 'Guías', item: new URL('/guias', config.siteUrl).toString() },
+      { '@type': 'ListItem', position: 3, name: guide.title, item: canonical },
+    ],
+  },
+];
+const relatedGuides = getRelatedGuides(guide);
+const updatedAt = new Intl.DateTimeFormat('es-AR', { dateStyle: 'long' }).format(new Date(`${guide.updatedAt}T12:00:00`));
 ---
-<BaseLayout title={`${guide.title} — StockTech`} description={guide.description} path={`/guias/${slug}`}>
+
+<BaseLayout title={`${guide.title} — StockTech`} description={guide.description} path={`/guias/${guide.slug}`} {structuredData}>
   <LegalHeader />
-  <main id="contenido" class="container legal-main">
-    <p class="eyebrow">Guía StockTech</p><h1 class="display">{guide.title}</h1><p class="lead">{guide.description}</p>
-    {guide.sections.map(([heading, body]) => <section><h2 class="display">{heading}</h2><p>{body}</p></section>)}
-    <p><a class="button button-dark" href="/#sumate">Conocé StockTech</a></p>
+  <main id="contenido" class="guide-main container">
+    <nav class="breadcrumbs" aria-label="Migas de pan"><a href="/">Inicio</a><span aria-hidden="true">/</span><a href="/guias">Guías</a><span aria-hidden="true">/</span><span aria-current="page">{guide.title}</span></nav>
+    <article>
+      <header class="guide-header">
+        <p class="eyebrow">Guía para comercios argentinos</p>
+        <h1 class="display">{guide.title}</h1>
+        <p class="lead">{guide.description}</p>
+        <p class="guide-updated">Actualizada el {updatedAt}</p>
+      </header>
+      <div class="guide-content">
+        <p class="guide-intro">{guide.intro}</p>
+        {guide.sections.map((section) => <section>
+          <h2 class="display">{section.heading}</h2>
+          {section.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+        </section>)}
+      </div>
+    </article>
+    {guide.references && <section class="guide-references" aria-labelledby="fuentes-title"><h2 id="fuentes-title" class="display">Fuentes para ampliar</h2><ul>{guide.references.map((reference) => <li><a href={reference.url} target="_blank" rel="noopener noreferrer">{reference.label}</a></li>)}</ul></section>}
+    {relatedGuides.length > 0 && <aside class="related-guides" aria-labelledby="related-title"><p class="eyebrow">Seguí leyendo</p><h2 id="related-title" class="display">Guías relacionadas</h2><ul>{relatedGuides.map((related) => <li><a href={`/guias/${related.slug}`}>{related.title}<span aria-hidden="true">→</span></a></li>)}</ul></aside>}
+    <p class="guide-cta"><a class="button button-dark" href="/#sumate">Conocé StockTech</a></p>
   </main>
   <Footer whatsappUrl={config.whatsappUrl} />
 </BaseLayout>

@@ -1,13 +1,16 @@
 ---
+import { getRuntimeConfig } from '../../config/env';
 interface Props { whatsappUrl: string }
 const { whatsappUrl } = Astro.props;
+const analytics = getRuntimeConfig().analytics;
+const analyticsPreferencesEnabled = analytics.enabled && Boolean(analytics.ga4MeasurementId || analytics.metaPixelId);
 ---
 <footer class="site-footer"><div class="container">
   <div class="footer-grid">
     <div><p class="display footer-brand">Stock<span>Tech</span></p><p>Stock, ventas, pagos, caja y facturación con ARCA en un mismo flujo. Para comercios y PyMEs de Argentina.</p><small class="mono">Desarrollado por EzeTech</small></div>
     <nav aria-label="Producto"><p class="eyebrow">Producto</p><ul><li><a href="/#producto">Un solo flujo</a></li><li><a href="/#offline">Sin conexión</a></li><li><a href="/#arca">Pagos y ARCA</a></li><li><a href="/#precios">Precios</a></li></ul></nav>
-    <nav aria-label="Guías"><p class="eyebrow">Guías</p><ul><li><a href="/guias/control-de-stock">Control de stock</a></li><li><a href="/guias/facturacion-arca">Facturación con ARCA</a></li><li><a href="/guias/sistema-gestion-pymes">Gestión para PyMEs</a></li></ul></nav>
-    <nav aria-label="Contacto y legales"><p class="eyebrow">Contacto</p><ul><li><a href={whatsappUrl} target="_blank" rel="noopener noreferrer" data-track="WHATSAPP_CLICK">WhatsApp</a></li><li><a href="/privacidad">Privacidad</a></li><li><a href="/terminos">Términos</a></li></ul></nav>
+    <nav aria-label="Guías"><p class="eyebrow">Guías</p><ul><li><a href="/guias">Todas las guías</a></li><li><a href="/guias/control-de-stock">Control de stock</a></li><li><a href="/guias/facturacion-arca">Facturación con ARCA</a></li><li><a href="/guias/sistema-gestion-pymes">Gestión para PyMEs</a></li></ul></nav>
+    <nav aria-label="Contacto y legales"><p class="eyebrow">Contacto</p><ul><li><a href={whatsappUrl} target="_blank" rel="noopener noreferrer" data-track="WHATSAPP_CLICK">WhatsApp</a></li><li><a href="/privacidad">Privacidad</a></li><li><a href="/terminos">Términos</a></li>{analyticsPreferencesEnabled && <li><button class="footer-link" type="button" data-analytics-preferences>Preferencias de medición</button></li>}</ul></nav>
   </div>
   <div class="footer-bottom"><p class="mono">© 2026 StockTech</p><p class="mono">Hecho en Argentina</p></div>
 </div></footer>

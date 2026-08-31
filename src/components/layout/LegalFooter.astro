@@ -1,5 +1,8 @@
 ---
+import { getRuntimeConfig } from '../../config/env';
 interface Props { counterpartHref: string; counterpartLabel: string }
 const { counterpartHref, counterpartLabel } = Astro.props;
+const analytics = getRuntimeConfig().analytics;
+const analyticsPreferencesEnabled = analytics.enabled && Boolean(analytics.ga4MeasurementId || analytics.metaPixelId);
 ---
-<footer class="legal-footer"><div class="container"><p>© 2026 StockTech by EzeTech</p><a href={counterpartHref}>{counterpartLabel}</a></div></footer>
+<footer class="legal-footer"><div class="container"><p>© 2026 StockTech by EzeTech</p><a href={counterpartHref}>{counterpartLabel}</a>{analyticsPreferencesEnabled && <button type="button" data-analytics-preferences>Preferencias de medición</button>}</div></footer>
