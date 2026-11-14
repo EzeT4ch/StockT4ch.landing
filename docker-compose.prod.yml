@@ -1,0 +1,98 @@
+# Compose de producción para Dokploy (app tipo "Compose"). Ver README.md, sección "Deploy en Dokploy".
+# Traefik (el de Dokploy) termina TLS; este servicio no publica puertos en el host.
+# Los nombres de routers/services/middlewares llevan prefijo "landing-": las etiquetas
+# de Traefik son globales en el VPS y el producto usa "stocktech-*".
+name: stocktech-landing
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 4321
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:?PUBLIC_SITE_URL es obligatoria}
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL:?PUBLIC_APP_URL es obligatoria}
+      APP_LINKS_ENABLED: ${APP_LINKS_ENABLED:-false}
+      PUBLIC_CONTACT_EMAIL: ${PUBLIC_CONTACT_EMAIL:?PUBLIC_CONTACT_EMAIL es obligatoria}
+      PUBLIC_WHATSAPP_NUMBER: ${PUBLIC_WHATSAPP_NUMBER:?PUBLIC_WHATSAPP_NUMBER es obligatoria}
+      LEGAL_DATA_CONTROLLER_NAME: ${LEGAL_DATA_CONTROLLER_NAME:?LEGAL_DATA_CONTROLLER_NAME es obligatoria}
+      LEGAL_ADDRESS: ${LEGAL_ADDRESS:?LEGAL_ADDRESS es obligatoria}
+      LEGAL_JURISDICTION: ${LEGAL_JURISDICTION:?LEGAL_JURISDICTION es obligatoria}
+      LEGAL_LAST_UPDATED: ${LEGAL_LAST_UPDATED:?LEGAL_LAST_UPDATED es obligatoria}
+      LEGAL_PRIVACY_VERSION: ${LEGAL_PRIVACY_VERSION:?LEGAL_PRIVACY_VERSION es obligatoria}
+      LEAD_RETENTION_MONTHS: ${LEAD_RETENTION_MONTHS:?LEAD_RETENTION_MONTHS es obligatoria}
+      SITE_MODE: ${SITE_MODE:-prelaunch}
+      TRIAL_DAYS: ${TRIAL_DAYS:-15}
+      FOUNDERS_SLOTS: ${FOUNDERS_SLOTS:-10}
+      FOUNDERS_DISCOUNT: ${FOUNDERS_DISCOUNT:-20}
+      EXPERIMENTS_ENABLED: ${EXPERIMENTS_ENABLED:-true}
+      EXPERIMENT_HERO_ENABLED: ${EXPERIMENT_HERO_ENABLED:-true}
+      EXPERIMENT_HERO_WEIGHT_A: ${EXPERIMENT_HERO_WEIGHT_A:-50}
+      EXPERIMENT_HERO_WEIGHT_B: ${EXPERIMENT_HERO_WEIGHT_B:-50}
+      ANALYTICS_ENABLED: ${ANALYTICS_ENABLED:-false}
+      ANALYTICS_DEBUG: ${ANALYTICS_DEBUG:-false}
+      GA4_MEASUREMENT_ID: ${GA4_MEASUREMENT_ID:-}
+      META_PIXEL_ID: ${META_PIXEL_ID:-}
+      CLOUDFLARE_WEB_ANALYTICS_TOKEN: ${CLOUDFLARE_WEB_ANALYTICS_TOKEN:-}
+      LEAD_EMAIL_TO: ${LEAD_EMAIL_TO:?LEAD_EMAIL_TO es obligatoria}
+      LEAD_EMAIL_FROM: ${LEAD_EMAIL_FROM:?LEAD_EMAIL_FROM es obligatoria}
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-smtp}
+      SMTP_HOST: ${SMTP_HOST:?SMTP_HOST es obligatoria}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:?SMTP_USER es obligatoria}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:?SMTP_PASSWORD es obligatoria}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+    expose:
+      - "4321"
+    networks:
+      - dokploy-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4321/health/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      # Raíz: HTTP -> HTTPS (301) y HTTPS hacia la app
+      - traefik.http.routers.landing-web-http.rule=Host(`${SITE_DOMAIN}`)
+      - traefik.http.routers.landing-web-http.entrypoints=web
+      - traefik.http.routers.landing-web-http.middlewares=landing-https-redirect
+      - traefik.http.routers.landing-web.rule=Host(`${SITE_DOMAIN}`)
+      - traefik.http.routers.landing-web.entrypoints=websecure
+      - traefik.http.routers.landing-web.tls.certresolver=letsencrypt
+      - traefik.http.routers.landing-web.middlewares=landing-hsts,landing-compress
+      - traefik.http.services.landing-web.loadbalancer.server.port=4321
+      # www: 301 a la raíz conservando path y query (HTTP y HTTPS)
+      - traefik.http.routers.landing-www-http.rule=Host(`www.${SITE_DOMAIN}`)
+      - traefik.http.routers.landing-www-http.entrypoints=web
+      - traefik.http.routers.landing-www-http.middlewares=landing-www-redirect
+      - traefik.http.routers.landing-www.rule=Host(`www.${SITE_DOMAIN}`)
+      - traefik.http.routers.landing-www.entrypoints=websecure
+      - traefik.http.routers.landing-www.tls.certresolver=letsencrypt
+      - traefik.http.routers.landing-www.middlewares=landing-www-redirect
+      # /_astro/ (assets con hash): cache immutable
+      - traefik.http.routers.landing-assets.rule=Host(`${SITE_DOMAIN}`) && PathPrefix(`/_astro/`)
+      - traefik.http.routers.landing-assets.entrypoints=websecure
+      - traefik.http.routers.landing-assets.tls.certresolver=letsencrypt
+      - traefik.http.routers.landing-assets.priority=100
+      - traefik.http.routers.landing-assets.middlewares=landing-hsts,landing-compress,landing-immutable
+      - traefik.http.routers.landing-assets.service=landing-web
+      # Middlewares
+      - traefik.http.middlewares.landing-https-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.landing-https-redirect.redirectscheme.permanent=true
+      - traefik.http.middlewares.landing-www-redirect.redirectregex.regex=^https?://www\.${SITE_DOMAIN}(.*)
+      - traefik.http.middlewares.landing-www-redirect.redirectregex.replacement=https://${SITE_DOMAIN}$${1}
+      - traefik.http.middlewares.landing-www-redirect.redirectregex.permanent=true
+      - traefik.http.middlewares.landing-hsts.headers.stsseconds=15552000
+      - traefik.http.middlewares.landing-compress.compress=true
+      - traefik.http.middlewares.landing-immutable.headers.customresponseheaders.Cache-Control=public, max-age=31536000, immutable
+
+networks:
+  dokploy-network:
+    external: true

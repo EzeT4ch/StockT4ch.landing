@@ -11,6 +11,8 @@ const productionEnv = (): NodeJS.ProcessEnv => ({
 });
 
 describe('runtime config', () => {
+  it('APP_LINKS_ENABLED ausente es false', () => expect(validateRuntimeConfig(productionEnv()).appLinksEnabled).toBe(false));
+  it('APP_LINKS_ENABLED="true" es true', () => expect(validateRuntimeConfig({ ...productionEnv(), APP_LINKS_ENABLED: 'true' }).appLinksEnabled).toBe(true));
   it('acepta una configuración productiva completa', () => expect(validateRuntimeConfig(productionEnv()).commercial.trialDays).toBe(15));
   it('acepta un remitente SMTP con nombre visible', () => expect(validateRuntimeConfig({ ...productionEnv(), LEAD_EMAIL_FROM: 'StockTech <web@stocktech.test>' }).email.from).toBe('StockTech <web@stocktech.test>'));
   it('rechaza un remitente SMTP con formato inválido', () => expect(() => validateRuntimeConfig({ ...productionEnv(), LEAD_EMAIL_FROM: 'StockTech <web@stocktech.test' })).toThrow(/emails/i));

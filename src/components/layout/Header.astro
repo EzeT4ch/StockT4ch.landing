@@ -1,6 +1,11 @@
 ---
+import { getRuntimeConfig } from '../../config/env';
+
 interface Props { ctaLabel: string }
 const { ctaLabel } = Astro.props;
+const { appUrl, appLinksEnabled } = getRuntimeConfig();
+const loginUrl = new URL('/login', appUrl).toString();
+const registerUrl = new URL('/register', appUrl).toString();
 ---
 
 <header class="site-header" data-header>
@@ -12,6 +17,11 @@ const { ctaLabel } = Astro.props;
     <nav class="desktop-nav" aria-label="Secciones">
       <a href="#producto">Producto</a><a href="#offline">Sin conexión</a><a href="#precios">Precios</a><a href="#preguntas">Preguntas</a>
     </nav>
+    {appLinksEnabled && (
+      <div class="app-links desktop-app-links">
+        <a href={loginUrl}>Ingresar</a><a href={registerUrl}>Registrarse</a>
+      </div>
+    )}
     <a class="button button-dark header-cta" href="#sumate" data-track="CTA_CLICK" data-placement="header">{ctaLabel}</a>
     <button class="menu-toggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="mobile-menu" data-menu-toggle>
       <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
@@ -21,6 +31,11 @@ const { ctaLabel } = Astro.props;
     <nav aria-label="Secciones móviles">
       <a href="#producto">Producto</a><a href="#offline">Sin conexión</a><a href="#fundadores">Clientes Fundadores</a><a href="#precios">Precios</a><a href="#preguntas">Preguntas</a>
     </nav>
+    {appLinksEnabled && (
+      <div class="app-links mobile-app-links">
+        <a href={loginUrl}>Ingresar</a><a href={registerUrl}>Registrarse</a>
+      </div>
+    )}
     <a class="button button-dark" href="#sumate" data-track="CTA_CLICK" data-placement="mobile_nav">{ctaLabel}</a>
   </div>
 </header>
