@@ -12,6 +12,7 @@ test-results
 *.log
 Dockerfile*
 compose*.yaml
+docker-compose*.yml
 README.md
 QA-REPORT.md
 tests

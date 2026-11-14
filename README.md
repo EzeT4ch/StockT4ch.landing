@@ -48,30 +48,58 @@ docker compose down
 
 Nginx queda publicado en `http://localhost:8080` por defecto. En un servidor público definí `NGINX_PORT=80`. El contenedor `web` no publica puertos: usa una red interna para el proxy y una red de salida aislada para enviar leads por SMTP. La home y el HTML no se cachean de forma compartida para no mezclar cohortes A/B; los assets hash de `/_astro/` usan cache immutable.
 
-## HTTPS en producción
+## Deploy en Dokploy
 
-El Compose base inicia en HTTP para que el proyecto funcione localmente sin certificados. Cuando `stocktech.com.ar` y `www.stocktech.com.ar` resuelvan al servidor, emití el primer certificado de Let's Encrypt y activá el override de producción:
+La landing se publica en la raíz (`stocktech.com.ar`) con el Traefik de Dokploy. `www.stocktech.com.ar` redirige con un 301 a la raíz y el producto vive en `app.stocktech.com.ar`. No hay nginx ni certbot en producción: Traefik termina TLS (certresolver `letsencrypt`), aplica HSTS, gzip y cache `immutable` en `/_astro/` (ver las etiquetas de `docker-compose.prod.yml`).
 
-```bash
-CONTACT_EMAIL=$(sed -n 's/^PUBLIC_CONTACT_EMAIL=//p' .env.production)
-sudo docker compose --env-file .env.production stop nginx
-sudo certbot certonly --standalone --non-interactive --agree-tos --email "$CONTACT_EMAIL" -d stocktech.com.ar -d www.stocktech.com.ar
-sudo docker compose --env-file .env.production -f compose.yaml -f compose.production.yaml up -d --build
-```
+`docker-compose.prod.yml` define solo el servicio `web` (puerto 4321) en la red externa `dokploy-network`, sin puertos publicados. Todos los routers, services y middlewares llevan el prefijo `landing-`; los del producto son `stocktech-*`. Las etiquetas de Traefik son globales en el VPS, así que no se pueden repetir nombres.
 
-`compose.production.yaml` expone 443, redirige HTTP y `www` a `https://stocktech.com.ar`, monta los certificados en modo lectura y atiende los desafíos de renovación. Luego del primer certificado, configurá la renovación por webroot y verificála con:
+Validar el compose localmente:
 
 ```bash
-sudo certbot reconfigure --cert-name stocktech.com.ar --webroot -w /opt/stocktech/certbot/www
-sudo certbot renew --dry-run
+docker compose --env-file .env.example -f docker-compose.prod.yml config
 ```
+
+### DNS
+
+| Tipo | Nombre | Valor |
+| --- | --- | --- |
+| A | `@` (`stocktech.com.ar`) | IP del VPS |
+| A | `www` | IP del VPS |
+| A | `app` | IP del VPS |
+
+(Si se usa CNAME para `www`, apuntarlo a `stocktech.com.ar`.)
+
+### Variables en Dokploy
+
+Cargar en la app Compose de la landing las variables de `.env.example`: `SITE_DOMAIN=stocktech.com.ar`, `PUBLIC_SITE_URL`, `PUBLIC_APP_URL=https://app.stocktech.com.ar`, `APP_LINKS_ENABLED`, datos legales, `LEAD_EMAIL_*` y `SMTP_*`. `APP_LINKS_ENABLED` (por defecto `false`) muestra los botones «Ingresar» y «Registrarse» del header, que apuntan a `${PUBLIC_APP_URL}/login` y `${PUBLIC_APP_URL}/register`. Con `false` la landing no enlaza al producto.
+
+### CI/CD y secrets de GitHub
+
+`.github/workflows/deploy.yml` corre en cada push a `main` (y en los PR): `npm ci`, `npm test`, `npm run build` y `npm run test:e2e` (chromium). Solo si todo pasa, el job `deploy` llama a `POST {DOKPLOY_URL}/api/compose.deploy`. Secrets de GitHub requeridos:
+
+- `DOKPLOY_URL`
+- `DOKPLOY_TOKEN`
+- `DOKPLOY_COMPOSE_ID` (el de la app Compose de la landing)
+
+**Apagar el Autodeploy de Dokploy** en la app de la landing: el único disparador del deploy es el job de GitHub, que corre después de los tests. Los avisos de falla son los mails de GitHub y de Dokploy. El rollback es manual desde Dokploy; para volver atrás, detener la app de la landing.
+
+### Orden del corte
+
+1. DNS: apuntar `app` y `www` al VPS.
+2. Mover el producto a `app.stocktech.com.ar` en Dokploy y actualizar las URLs de Mercado Pago.
+3. Crear la app Compose de la landing (repo `StockT4ch.landing`, rama `main`, *Compose Path* `./docker-compose.prod.yml`), cargar las variables, apagar Autodeploy, cargar los 3 secrets en GitHub y desplegar.
+
+No desplegar la landing mientras el producto siga en la raíz: ambos responderían al mismo `Host` y Traefik elegiría uno.
 
 ## Environment
 
 | Variable | Uso |
 | --- | --- |
 | `PUBLIC_SITE_URL` | URL canónica pública de la web |
+| `SITE_DOMAIN` | Dominio raíz para las etiquetas de Traefik (`docker-compose.prod.yml`) |
 | `PUBLIC_APP_URL` | URL de la aplicación Angular |
+| `APP_LINKS_ENABLED` | `true` muestra «Ingresar» y «Registrarse» en el header; por defecto `false` |
 | `PUBLIC_CONTACT_EMAIL` | Email público de contacto |
 | `PUBLIC_WHATSAPP_NUMBER` | Número internacional sólo con dígitos |
 | `SITE_MODE` | `prelaunch` o `launched` |
@@ -191,7 +219,7 @@ No hay video, foto ni capturas productivas en los materiales entregados.
 
 ## Seguridad y operación
 
-Node emite CSP, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` y `frame-ancestors`. Nginx administra proxy, body limit, timeouts, compresión y cache. No se configura CORS wildcard.
+Node emite CSP, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` y `frame-ancestors`. En producción, Traefik administra TLS, HSTS, compresión y cache de assets; en desarrollo local, nginx (`compose.yaml`). No se configura CORS wildcard.
 
 Health checks:
 

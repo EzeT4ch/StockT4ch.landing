@@ -6,6 +6,7 @@ export interface RuntimeConfig {
   readonly nodeEnv: 'development' | 'test' | 'production';
   readonly siteUrl: URL;
   readonly appUrl: URL;
+  readonly appLinksEnabled: boolean;
   readonly contactEmail: string;
   readonly whatsappNumber: string;
   readonly whatsappUrl: string;
@@ -140,6 +141,7 @@ export const validateRuntimeConfig = (env: NodeJS.ProcessEnv): RuntimeConfig => 
     nodeEnv,
     siteUrl,
     appUrl,
+    appLinksEnabled: parseBoolean(env.APP_LINKS_ENABLED, false),
     contactEmail,
     whatsappNumber,
     whatsappUrl: `https://wa.me/${whatsappNumber}?text=${encodeURIComponent('Hola, quiero saber más sobre StockTech.')}`,

@@ -45,3 +45,30 @@ test('mobile no tiene overflow horizontal', async ({ page }) => {
   expect(overflow).toBe(false);
   await expect(page.locator('.mobile-sticky')).toBeVisible();
 });
+
+const APP_LINKS_URL = 'http://127.0.0.1:4323';
+
+test.describe('botones al producto', () => {
+  test('escritorio: Ingresar y Registrarse apuntan a la app', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'escritorio');
+    await page.goto(`${APP_LINKS_URL}/`);
+    const nav = page.locator('header.site-header .header-inner');
+    await expect(nav.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', 'https://app.stocktech.test/login');
+    await expect(nav.getByRole('link', { name: 'Registrarse' })).toHaveAttribute('href', 'https://app.stocktech.test/register');
+  });
+
+  test('mobile: el menú tiene Ingresar y Registrarse', async ({ page, isMobile }) => {
+    test.skip(!isMobile, 'mobile');
+    await page.goto(`${APP_LINKS_URL}/`);
+    await page.getByRole('button', { name: 'Abrir menú' }).click();
+    const menu = page.locator('#mobile-menu');
+    await expect(menu.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('href', 'https://app.stocktech.test/login');
+    await expect(menu.getByRole('link', { name: 'Registrarse' })).toHaveAttribute('href', 'https://app.stocktech.test/register');
+  });
+
+  test('con el flag en false no hay links a la app', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('a[href^="https://app.stocktech.test"]')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Ingresar' })).toHaveCount(0);
+  });
+});
