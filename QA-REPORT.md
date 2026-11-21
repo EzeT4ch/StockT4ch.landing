@@ -54,6 +54,8 @@ Lighthouse 13 se ejecutó sobre el proceso Node standalone generado por `npm run
 - CLS: 0,095.
 - TBT: 0 ms.
 
+Actualización EZE-31 (modo `launched`, `npm run build && npm start`, emulación mobile): Performance **98–100** · Accessibility **100** · Best Practices **100** · SEO **100** · LCP 1,5–1,8 s · CLS 0,03. Cambios: CSS inline (`build.inlineStylesheets: 'always'`), solo subconjunto latin de las fuentes, fuentes secundarias (Inter 500/600, Plex Mono 500/600) cargadas sin bloquear el primer render, HTML comprimido con Brotli/gzip desde el middleware y foto en WebP con dimensiones explícitas.
+
 Reportes: `reports/lighthouse-mobile.report.html` y `reports/lighthouse-mobile.report.json`.
 
 La CLI terminó con un error `EPERM` al intentar borrar su directorio temporal de Windows después de escribir ambos reportes. Los JSON/HTML se generaron completos y los puntajes anteriores se extrajeron del JSON final. El error de limpieza no afectó la auditoría.

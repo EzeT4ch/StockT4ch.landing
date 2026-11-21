@@ -8,6 +8,7 @@ const productionEnv = (): NodeJS.ProcessEnv => ({
   LEAD_EMAIL_TO: 'leads@stocktech.test', LEAD_EMAIL_FROM: 'web@stocktech.test', EMAIL_PROVIDER: 'smtp', SMTP_HOST: 'smtp.stocktech.test',
   SMTP_USER: 'user', SMTP_PASSWORD: 'secret', SMTP_PORT: '587', SMTP_SECURE: 'false',
   LEGAL_DATA_CONTROLLER_NAME: 'EzeTech SAS', LEGAL_ADDRESS: 'CABA, Argentina', LEGAL_JURISDICTION: 'Argentina', LEGAL_LAST_UPDATED: '2026-08-26', LEGAL_PRIVACY_VERSION: 'v1.0', LEAD_RETENTION_MONTHS: '12',
+  PRICE_COMERCIO_ARS_MONTHLY: '40000', PRICE_NEGOCIO_ARS_MONTHLY: '60000', PRICE_EMPRESA_ARS_MONTHLY: '95000',
 });
 
 describe('runtime config', () => {
@@ -23,4 +24,25 @@ describe('runtime config', () => {
   it('falla ante trial histórico', () => expect(() => validateRuntimeConfig({ ...productionEnv(), TRIAL_DAYS: '14' })).toThrow(/15/));
   it('falla ante pesos que no suman 100', () => expect(() => validateRuntimeConfig({ ...productionEnv(), EXPERIMENT_HERO_WEIGHT_A: '70' })).toThrow(/pesos/i));
   it('no permite proveedor console en producción', () => expect(() => validateRuntimeConfig({ ...productionEnv(), EMAIL_PROVIDER: 'console' })).toThrow(/smtp/i));
+
+  describe('precios por variable de entorno', () => {
+    const names = ['PRICE_COMERCIO_ARS_MONTHLY', 'PRICE_NEGOCIO_ARS_MONTHLY', 'PRICE_EMPRESA_ARS_MONTHLY'] as const;
+    for (const name of names) {
+      it(`en producción falla sin ${name}`, () => {
+        const env = productionEnv(); delete env[name];
+        expect(() => validateRuntimeConfig(env)).toThrow(new RegExp(name));
+      });
+      it(`en producción falla con ${name} vacío`, () => expect(() => validateRuntimeConfig({ ...productionEnv(), [name]: '' })).toThrow(new RegExp(name)));
+      for (const bad of ['0', '-100', '34900.5', 'abc']) {
+        it(`falla con ${name}=${bad}`, () => expect(() => validateRuntimeConfig({ ...productionEnv(), [name]: bad })).toThrow(new RegExp(name)));
+      }
+    }
+    it('con valores válidos las tarjetas usan esos precios', () => {
+      expect(validateRuntimeConfig(productionEnv()).commercial.plans.map((plan) => plan.price)).toEqual([40_000, 60_000, 95_000]);
+    });
+    it('en desarrollo usa los valores actuales', () => {
+      const prices = validateRuntimeConfig({ NODE_ENV: 'development' }).commercial.plans.map((plan) => plan.price);
+      expect(prices).toEqual([34_900, 54_900, 89_900]);
+    });
+  });
 });

@@ -21,11 +21,14 @@ export interface CommercialConfig {
   readonly plans: readonly CommercialPlan[];
 }
 
+export const DEFAULT_PRICES = { comercio: 34_900, negocio: 54_900, empresa: 89_900 } as const;
+
 export const createCommercialConfig = (values: {
   mode: SiteMode;
   trialDays: number;
   founderSlots: number;
   founderDiscount: number;
+  prices: Readonly<Record<CommercialPlan['id'], number>>;
 }): CommercialConfig => ({
   brand: { product: 'StockTech', company: 'EzeTech' },
   mode: values.mode,
@@ -39,14 +42,14 @@ export const createCommercialConfig = (values: {
     {
       id: 'comercio',
       name: 'Comercio',
-      price: 34_900,
+      price: values.prices.comercio,
       who: 'Para negocios que quieren ordenar su operación diaria.',
       features: ['Stock y productos', 'Ventas desde el mostrador', 'Caja diaria', 'Facturación con ARCA', 'Efectivo, Mercado Pago y QR', 'Ventas de contingencia'],
     },
     {
       id: 'negocio',
       name: 'Negocio',
-      price: 54_900,
+      price: values.prices.negocio,
       recommended: true,
       who: 'Para comercios con más movimiento y necesidades de control.',
       features: ['Todo lo del plan Comercio', 'Varias sucursales', 'Reportes de ventas', 'Control de caja por turno', 'Ajustes de inventario'],
@@ -54,7 +57,7 @@ export const createCommercialConfig = (values: {
     {
       id: 'empresa',
       name: 'Empresa',
-      price: 89_900,
+      price: values.prices.empresa,
       who: 'Para operaciones de mayor complejidad o varias sucursales.',
       features: ['Todo lo del plan Negocio', 'Usuarios y permisos por rol', 'Auditoría de operaciones', 'Soporte prioritario', 'Acompañamiento en la carga inicial'],
     },

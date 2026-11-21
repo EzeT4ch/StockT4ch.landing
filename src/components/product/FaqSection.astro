@@ -1,8 +1,8 @@
 ---
-interface Props { trialDays: number; slots: number; discount: number }
-const { trialDays, slots, discount } = Astro.props;
+interface Props { trialDays: number; slots: number; discount: number; launched?: boolean }
+const { trialDays, slots, discount, launched = false } = Astro.props;
 import { createFaqs } from '../../config/content';
-const faqs = createFaqs(trialDays, slots, discount);
+const faqs = createFaqs(trialDays, slots, discount, launched);
 ---
 <section id="preguntas" class="section alt" aria-labelledby="faq-t"><div class="container faq-container">
   <h2 id="faq-t" class="display reveal">Preguntas frecuentes</h2>

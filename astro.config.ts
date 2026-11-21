@@ -9,6 +9,8 @@ export default defineConfig({
   }),
   session: false,
   compressHTML: true,
+  // CSS crítico inline: evita la petición que bloquea el render (FCP/LCP en mobile).
+  build: { inlineStylesheets: 'always' },
   server: {
     host: true,
     port: 4321,
