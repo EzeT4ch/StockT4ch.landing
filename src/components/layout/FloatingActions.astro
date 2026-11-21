@@ -1,8 +1,8 @@
 ---
 import WhatsAppIcon from './WhatsAppIcon.astro';
 
-interface Props { ctaLabel: string; whatsappUrl: string }
-const { ctaLabel, whatsappUrl } = Astro.props;
+interface Props { ctaLabel: string; ctaHref: string; whatsappUrl: string }
+const { ctaLabel, ctaHref, whatsappUrl } = Astro.props;
 ---
-<div class="mobile-sticky"><a class="button button-dark" href="#sumate" data-track="CTA_CLICK" data-placement="sticky_mobile">{ctaLabel}</a><a class="wa-icon" href={whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="Escribinos por WhatsApp" data-track="WHATSAPP_CLICK"><WhatsAppIcon /></a></div>
+<div class="mobile-sticky"><a class="button button-dark" href={ctaHref} data-track="CTA_CLICK" data-placement="sticky_mobile">{ctaLabel}</a><a class="wa-icon" href={whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="Escribinos por WhatsApp" data-track="WHATSAPP_CLICK"><WhatsAppIcon /></a></div>
 <a class="wa-floating" href={whatsappUrl} target="_blank" rel="noopener noreferrer" data-track="WHATSAPP_CLICK"><span class="wa-floating-icon"><WhatsAppIcon /></span>¿Tenés una duda? Hablemos</a>

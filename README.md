@@ -36,6 +36,10 @@ npm run build
 npm run test:e2e
 ```
 
+## Imagen social
+
+`public/social-card.png` (1200×630) es la `og:image`/`twitter:image` (WhatsApp y Facebook no muestran SVG). Se regenera con `node scripts/build-social-card.mjs` a partir de `scripts/social-card.html`.
+
 ## Docker
 
 Copiá `.env.example` fuera del control de versiones como `.env.production`, completá valores reales y ejecutá:
@@ -72,7 +76,7 @@ docker compose --env-file .env.example -f docker-compose.prod.yml config
 
 ### Variables en Dokploy
 
-Cargar en la app Compose de la landing las variables de `.env.example`: `SITE_DOMAIN=stocktech.com.ar`, `PUBLIC_SITE_URL`, `PUBLIC_APP_URL=https://app.stocktech.com.ar`, `APP_LINKS_ENABLED`, datos legales, `LEAD_EMAIL_*` y `SMTP_*`. `APP_LINKS_ENABLED` (por defecto `false`) muestra los botones «Ingresar» y «Registrarse» del header, que apuntan a `${PUBLIC_APP_URL}/login` y `${PUBLIC_APP_URL}/register`. Con `false` la landing no enlaza al producto.
+Cargar en la app Compose de la landing las variables de `.env.example`: `SITE_DOMAIN=stocktech.com.ar`, `PUBLIC_SITE_URL`, `PUBLIC_APP_URL=https://app.stocktech.com.ar`, `APP_LINKS_ENABLED`, datos legales, `LEAD_EMAIL_*` y `SMTP_*`. `PRICE_COMERCIO_ARS_MONTHLY`, `PRICE_NEGOCIO_ARS_MONTHLY` y `PRICE_EMPRESA_ARS_MONTHLY` (enteros > 0, en ARS por mes) son obligatorias en producción y no tienen valor por defecto: el compose las exige y `validateRuntimeConfig` falla sin ellas. En desarrollo y test se usan 34.900 / 54.900 / 89.900. `SITE_MODE=launched` apaga todo el pre-lanzamiento (Clientes Fundadores, precios estimativos, textos legales de lista de lanzamiento, demo «próximamente»); con `APP_LINKS_ENABLED=true` además todos los botones «Probar…» van a `${PUBLIC_APP_URL}/register`. Volver a `prelaunch` revierte. Si cambia el texto del consentimiento, actualizar `LEGAL_PRIVACY_VERSION` y `LEGAL_LAST_UPDATED`. `APP_LINKS_ENABLED` (por defecto `false`) muestra los botones «Ingresar» y «Registrarse» del header, que apuntan a `${PUBLIC_APP_URL}/login` y `${PUBLIC_APP_URL}/register`. Con `false` la landing no enlaza al producto.
 
 ### CI/CD y secrets de GitHub
 

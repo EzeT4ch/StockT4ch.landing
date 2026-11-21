@@ -1,11 +1,13 @@
 ---
-import '@fontsource/bricolage-grotesque/700.css';
-import '@fontsource/inter/400.css';
-import '@fontsource/inter/500.css';
-import '@fontsource/inter/600.css';
-import '@fontsource/ibm-plex-mono/500.css';
-import '@fontsource/ibm-plex-mono/600.css';
+import '@fontsource/bricolage-grotesque/latin-700.css';
+import '@fontsource/inter/latin-400.css';
 import '../../styles/global.css';
+// Los pesos secundarios se piden después del primer render (ver el <link> con onload abajo)
+// para que no compitan con el HTML en la carga inicial en mobile.
+import interMedium from '@fontsource/inter/latin-500.css?url';
+import interSemiBold from '@fontsource/inter/latin-600.css?url';
+import monoMedium from '@fontsource/ibm-plex-mono/latin-500.css?url';
+import monoSemiBold from '@fontsource/ibm-plex-mono/latin-600.css?url';
 import { getRuntimeConfig } from '../../config/env';
 import AnalyticsConsent from './AnalyticsConsent.astro';
 
@@ -19,6 +21,9 @@ interface Props {
 
 const { title, description, path = '/', noindex = false, structuredData } = Astro.props;
 const config = getRuntimeConfig();
+const secondaryFonts = [interMedium, interSemiBold, monoMedium, monoSemiBold];
+const secondaryFontLinks = secondaryFonts.map((href) => `<link rel="stylesheet" href="${href}" media="print" onload="this.media='all'">`).join('')
+  + `<noscript>${secondaryFonts.map((href) => `<link rel="stylesheet" href="${href}">`).join('')}</noscript>`;
 const canonical = new URL(path, config.siteUrl).toString();
 const analyticsConsentEnabled = config.analytics.enabled && Boolean(config.analytics.ga4MeasurementId || config.analytics.metaPixelId);
 const pageStructuredData = structuredData ? (Array.isArray(structuredData) ? structuredData : [structuredData]) : [];
@@ -36,6 +41,7 @@ const allStructuredData = [
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#FBF8F3" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <Fragment set:html={secondaryFontLinks} />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
@@ -46,12 +52,15 @@ const allStructuredData = [
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={new URL('/social-card.svg', config.siteUrl).toString()} />
+    <meta property="og:image" content={new URL('/social-card.png', config.siteUrl).toString()} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="StockTech, sistema de gestión para comercios" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={new URL('/social-card.svg', config.siteUrl).toString()} />
+    <meta name="twitter:image" content={new URL('/social-card.png', config.siteUrl).toString()} />
     <meta name="twitter:image:alt" content="StockTech, sistema de gestión para comercios" />
     {config.analytics.cloudflareWebAnalyticsToken && <script is:inline type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={JSON.stringify({ token: config.analytics.cloudflareWebAnalyticsToken })}></script>}
     <script type="application/ld+json" is:inline set:html={JSON.stringify(allStructuredData)} />

@@ -2,7 +2,16 @@ import { access, readFile, readdir } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 
 const required = ['PUBLIC_SITE_URL','PUBLIC_APP_URL','PUBLIC_CONTACT_EMAIL','PUBLIC_WHATSAPP_NUMBER','LEGAL_DATA_CONTROLLER_NAME','LEGAL_ADDRESS','LEGAL_JURISDICTION','LEGAL_LAST_UPDATED','LEGAL_PRIVACY_VERSION','LEAD_RETENTION_MONTHS','LEAD_EMAIL_TO','LEAD_EMAIL_FROM','EMAIL_PROVIDER','SMTP_HOST','SMTP_USER','SMTP_PASSWORD'];
+const priceVariables = [
+  'PRICE_COMERCIO_ARS_MONTHLY',
+  'PRICE_NEGOCIO_ARS_MONTHLY',
+  'PRICE_EMPRESA_ARS_MONTHLY',
+];
 const errors = [];
+for (const name of priceVariables) {
+  const price = Number(process.env[name]);
+  if (!process.env[name]?.trim() || !Number.isInteger(price) || price <= 0) errors.push(`${name} debe ser un entero mayor a 0.`);
+}
 for (const name of required) if (!process.env[name]?.trim()) errors.push(`${name} es obligatoria.`);
 for (const name of ['PUBLIC_SITE_URL','PUBLIC_APP_URL']) {
   try {

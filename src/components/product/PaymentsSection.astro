@@ -1,3 +1,7 @@
+---
+interface Props { launched?: boolean }
+const { launched = false } = Astro.props;
+---
 <section id="arca" class="section" aria-labelledby="arca-t">
   <div class="container payments-grid reveal">
     <div>
@@ -6,7 +10,7 @@
       <p class="lead">La factura sale de la venta que acabás de hacer, con los datos que ya cargaste.</p>
       <p class="payment-question">¿Cómo te pagaron?</p>
       <div class="payment-chips"><span><i class="cash"></i>Efectivo</span><span><i class="mp"></i>Mercado Pago</span><span><i class="qr"></i>QR</span></div>
-      <p class="subtle-copy">Más medios de pago próximamente.</p>
+      <p class="subtle-copy">{launched ? 'Vamos a sumar más medios de pago.' : 'Más medios de pago próximamente.'}</p>
     </div>
     <div class="mockup arca-ticket-wrap">
       <div class="ticket arca-ticket">

@@ -24,38 +24,40 @@ const commercial = config.commercial;
 const launched = commercial.mode === 'launched';
 const ctaLabel = launched ? `Probar ${commercial.trialDays} días gratis` : 'Sumarme al lanzamiento';
 const shortCtaLabel = launched ? 'Probar gratis' : ctaLabel;
+const registerUrl = new URL('/register', config.appUrl).toString();
+const ctaHref = launched && config.appLinksEnabled ? registerUrl : '#sumate';
 const trialLine = launched ? `${commercial.trialDays} días gratis. Sin tarjeta.` : `${commercial.trialDays} días gratis y sin tarjeta cuando lancemos.`;
 const experiment = Astro.locals.experiment ?? { experimentId: 'hero_copy_v1', variant: 'A' as const, version: 1 as const };
 const title = 'StockTech — Todo el flujo de tu comercio, en un solo lugar';
 const description = launched
   ? `Sistema de gestión para comercios argentinos: ventas, stock, caja y facturación con ARCA en un solo lugar. Probalo ${commercial.trialDays} días sin tarjeta.`
   : 'Sistema de gestión para comercios argentinos: ventas, stock, caja y facturación con ARCA en un solo lugar. Sumate a la lista de lanzamiento.';
-const faqs = createFaqs(commercial.trialDays, commercial.founders.slots, commercial.founders.discount);
+const faqs = createFaqs(commercial.trialDays, commercial.founders.slots, commercial.founders.discount, launched);
 const structuredData = [
-  { '@context': 'https://schema.org', '@type': 'SoftwareApplication', name: 'StockTech', applicationCategory: 'BusinessApplication', operatingSystem: 'Web', description, url: config.siteUrl.toString() },
+  { '@context': 'https://schema.org', '@type': 'SoftwareApplication', name: 'StockTech', applicationCategory: 'BusinessApplication', operatingSystem: 'Web', description, url: config.siteUrl.toString(), offers: commercial.plans.map((plan) => ({ '@type': 'Offer', name: `StockTech ${plan.name}`, price: String(plan.price), priceCurrency: 'ARS', priceSpecification: { '@type': 'UnitPriceSpecification', price: plan.price, priceCurrency: 'ARS', unitCode: 'MON' } })) },
   { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map(({ question, answer }) => ({ '@type': 'Question', name: question, acceptedAnswer: { '@type': 'Answer', text: answer } })) },
 ];
 ---
 <BaseLayout {title} {description} {structuredData}>
   <div data-page-context data-variant={experiment.variant} data-analytics-enabled={String(config.analytics.enabled)} data-analytics-debug={String(config.analytics.debug)} data-ga4={config.analytics.ga4MeasurementId ?? undefined} data-meta={config.analytics.metaPixelId ?? undefined}></div>
-  <Header ctaLabel={shortCtaLabel} />
+  <Header ctaLabel={shortCtaLabel} {ctaHref} {launched} />
   <main id="contenido">
-    <Hero variant={experiment.variant} {ctaLabel} {trialLine} />
+    <Hero variant={experiment.variant} {ctaLabel} {ctaHref} {trialLine} />
     <ProblemSection />
     <ProductFlow />
     <OfflineSection />
-    <PaymentsSection />
+    <PaymentsSection {launched} />
     <HowItWorks />
-    <DemoSection />
-    <FounderSection slots={commercial.founders.slots} discount={commercial.founders.discount} />
-    <PricingSection plans={commercial.plans} discount={commercial.founders.discount} trialDays={commercial.trialDays} {ctaLabel} />
+    {!launched && <DemoSection />}
+    {!launched && <FounderSection slots={commercial.founders.slots} discount={commercial.founders.discount} />}
+    <PricingSection plans={commercial.plans} discount={commercial.founders.discount} trialDays={commercial.trialDays} {ctaLabel} {ctaHref} {launched} />
     <SecuritySection />
-    <AboutSection {ctaLabel} />
-    <FaqSection trialDays={commercial.trialDays} slots={commercial.founders.slots} discount={commercial.founders.discount} />
+    <AboutSection {ctaLabel} {ctaHref} />
+    <FaqSection trialDays={commercial.trialDays} slots={commercial.founders.slots} discount={commercial.founders.discount} {launched} />
     <LeadSection {launched} trialDays={commercial.trialDays} {trialLine} whatsappUrl={config.whatsappUrl} privacyVersion={config.legal.privacyVersion} />
   </main>
   <Footer whatsappUrl={config.whatsappUrl} />
-  <FloatingActions {ctaLabel} whatsappUrl={config.whatsappUrl} />
+  <FloatingActions {ctaLabel} {ctaHref} whatsappUrl={config.whatsappUrl} />
   <script>
     import '../scripts/analytics-init';
     import '../scripts/site';

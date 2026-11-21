@@ -15,13 +15,13 @@ const { launched, privacyVersion } = Astro.props;
     <fieldset><legend>¿Cuántas sucursales tenés?</legend><div class="branch-options">
       {['1', '2-3', '4+'].map((option, index) => <label><input type="radio" name="sucursales" value={option} checked={index === 0} /><span>{option}</span></label>)}
     </div></fieldset>
-    <label class="privacy-consent"><input type="checkbox" name="privacyConsent" /><span>Leí la <a href="/privacidad">Política de privacidad</a> y autorizo el uso de mis datos para recibir información sobre StockTech y el acceso al lanzamiento.</span></label>
+    <label class="privacy-consent"><input type="checkbox" name="privacyConsent" /><span>Leí la <a href="/privacidad">Política de privacidad</a> y autorizo el uso de mis datos para {launched ? 'que me contacten con información sobre StockTech.' : 'recibir información sobre StockTech y el acceso al lanzamiento.'}</span></label>
     <p id="privacyConsent-error" class="field-error" role="alert"></p>
     <p class="form-error" role="alert" hidden data-form-error>No pudimos enviar tus datos. Probá de nuevo o escribinos por WhatsApp.</p>
-    <button class="button button-primary button-lg" type="submit" data-submit-label={launched ? 'Empezar mi prueba gratis' : 'Quiero probar StockTech'}>{launched ? 'Empezar mi prueba gratis' : 'Quiero probar StockTech'}</button>
+    <button class="button button-primary button-lg" type="submit" data-submit-label={launched ? 'Quiero que me contacten' : 'Quiero probar StockTech'}>{launched ? 'Quiero que me contacten' : 'Quiero probar StockTech'}</button>
     <p class="privacy-note mono">sin CUIT, sin dirección, sin tarjeta · usamos tus datos sólo para contactarte</p>
   </form>
-  <div class="lead-success" role="status" hidden data-lead-success><span>✓</span><h3 class="display">Listo, quedaste anotado</h3><p>Te escribimos a <strong data-success-email>tu email</strong> cuando abramos el acceso. Si querés adelantar algo, escribinos por WhatsApp.</p></div>
+  <div class="lead-success" role="status" hidden data-lead-success><span>✓</span><h3 class="display">Listo, quedaste anotado</h3><p>Te escribimos a <strong data-success-email>tu email</strong> {launched ? 'a la brevedad.' : 'cuando abramos el acceso.'} Si querés adelantar algo, escribinos por WhatsApp.</p></div>
 </div>
 
 <script>

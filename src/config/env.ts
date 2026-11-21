@@ -1,4 +1,4 @@
-import { createCommercialConfig, type CommercialConfig, type SiteMode } from './commercial';
+import { createCommercialConfig, DEFAULT_PRICES, type CommercialConfig, type SiteMode } from './commercial';
 
 export type EmailProvider = 'smtp' | 'console';
 
@@ -63,6 +63,20 @@ const parseInteger = (name: string, value: string | undefined, fallback: number)
   return parsed;
 };
 
+const parsePrice = (name: string, value: string | undefined, fallback: number, production: boolean, errors: string[]): number => {
+  const raw = value?.trim() ?? '';
+  if (raw === '') {
+    if (production) errors.push(`${name} es obligatoria en producción.`);
+    return fallback;
+  }
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    errors.push(`${name} debe ser un entero mayor a 0.`);
+    return fallback;
+  }
+  return parsed;
+};
+
 const parseUrl = (name: string, value: string): URL => {
   try {
     const url = new URL(value);
@@ -110,6 +124,11 @@ export const validateRuntimeConfig = (env: NodeJS.ProcessEnv): RuntimeConfig => 
   const cloudflareWebAnalyticsToken = env.CLOUDFLARE_WEB_ANALYTICS_TOKEN?.trim() || null;
 
   const errors: string[] = [];
+  const prices = {
+    comercio: parsePrice('PRICE_COMERCIO_ARS_MONTHLY', env.PRICE_COMERCIO_ARS_MONTHLY, DEFAULT_PRICES.comercio, production, errors),
+    negocio: parsePrice('PRICE_NEGOCIO_ARS_MONTHLY', env.PRICE_NEGOCIO_ARS_MONTHLY, DEFAULT_PRICES.negocio, production, errors),
+    empresa: parsePrice('PRICE_EMPRESA_ARS_MONTHLY', env.PRICE_EMPRESA_ARS_MONTHLY, DEFAULT_PRICES.empresa, production, errors),
+  };
   if (!['prelaunch', 'launched'].includes(siteMode)) errors.push('SITE_MODE debe ser prelaunch o launched.');
   if (trialDays !== 15) errors.push('TRIAL_DAYS debe ser 15.');
   if (founderSlots < 1 || founderSlots > 100) errors.push('FOUNDERS_SLOTS debe estar entre 1 y 100.');
@@ -145,7 +164,7 @@ export const validateRuntimeConfig = (env: NodeJS.ProcessEnv): RuntimeConfig => 
     contactEmail,
     whatsappNumber,
     whatsappUrl: `https://wa.me/${whatsappNumber}?text=${encodeURIComponent('Hola, quiero saber más sobre StockTech.')}`,
-    commercial: createCommercialConfig({ mode: siteMode, trialDays, founderSlots, founderDiscount }),
+    commercial: createCommercialConfig({ mode: siteMode, trialDays, founderSlots, founderDiscount, prices }),
     experiments: {
       enabled: parseBoolean(env.EXPERIMENTS_ENABLED, true),
       heroEnabled: parseBoolean(env.EXPERIMENT_HERO_ENABLED, true),

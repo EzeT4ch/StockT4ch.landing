@@ -19,6 +19,13 @@ export default defineConfig({
     reuseExistingServer: false,
     timeout: 120_000,
     env: { ...process.env, CI: '1', HOST: '127.0.0.1', PORT: '4323', APP_LINKS_ENABLED: 'true', PUBLIC_APP_URL: 'https://app.stocktech.test' },
+  }, {
+    // Tercera instancia: sitio lanzado (sin pre-lanzamiento) con los botones a la app.
+    command: 'npm run start',
+    url: 'http://127.0.0.1:4324/health/live',
+    reuseExistingServer: false,
+    timeout: 120_000,
+    env: { ...process.env, CI: '1', HOST: '127.0.0.1', PORT: '4324', SITE_MODE: 'launched', APP_LINKS_ENABLED: 'true', PUBLIC_APP_URL: 'https://app.stocktech.test' },
   }],
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
